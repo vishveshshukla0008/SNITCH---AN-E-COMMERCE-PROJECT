@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const requiredEnvVars = ["PORT", "MONGO_URI", "JWT_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN", "GOOGLE_USER", "FRONTEND_URL"];
+const requiredEnvVars = ["PORT", "MONGO_URI", "JWT_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN", "GOOGLE_USER", "FRONTEND_URL", "GOOGLE_CALLBACK_URL"];
 
 requiredEnvVars.forEach((key) => {
     if (!process.env[key]) {
@@ -17,6 +17,7 @@ export const config = {
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     GOOGLE_REFRESH_TOKEN: process.env.GOOGLE_REFRESH_TOKEN,
     GOOGLE_USER: process.env.GOOGLE_USER,
-    FRONTEND_URL: process.env.FRONTEND_URL
+    FRONTEND_URL: process.env.FRONTEND_URL,
+    GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL
 }
 

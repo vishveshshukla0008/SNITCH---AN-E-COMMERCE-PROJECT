@@ -10,18 +10,31 @@ const userSchema = new mongoose.Schema({
     },
     contact: {
         type: String,
-        required: true,
         trim: true,
-        unique: true
+        unique: true,
+        sparse: true,
+        required: function () {
+            return this.authProvider === "local";
+        }
     },
     fullname: {
         type: String,
         required: true,
         trim: true,
     },
+    googleId: {
+        type: String,
+        unique: true,
+        select: false
+    },
+    avatar: String,
+    authProvider: {
+        type: String,
+        enum: ["local", "google"],
+        default: "local",
+    },
     password: {
         type: String,
-        required: true,
         trim: true,
         select: false
     },

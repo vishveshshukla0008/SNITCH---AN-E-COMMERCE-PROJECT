@@ -4,6 +4,7 @@ import { AppError } from "../utils/AppError.js";
 import { AsyncWrapper } from "../utils/AsyncWrapper.js";
 import { generateToken } from "../utils/jwt.Utils.js";
 import { getRedis } from "../config/cache.js";
+import { config } from "../config/config.js";
 
 const registerUserController = AsyncWrapper(async (req, res) => {
     const { email, contact, fullname, password, role } = req.body;
@@ -96,4 +97,49 @@ const logoutUserController = AsyncWrapper(async (req, res) => {
 
 
 
-export const authController = { registerUserController, loginUserController, verifyAccountController, getMeController, logoutUserController };
+// Google Login Controller :
+
+const googleLoginController = AsyncWrapper(async (req, res) => {
+
+    try {
+        let googleUser = req.user;
+        const email = googleUser.emails[0].value;
+
+        let user = await userModel.findOne({ email });
+
+        if (!user) {
+            user = await userModel.create({
+                email,
+                fullname: googleUser.displayName,
+                avatar: googleUser.photos[0].value,
+                authProvider: "google",
+                isVerified: true
+            })
+        }
+
+        const token = generateToken({ userId: user._id, email: user.email });
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
+
+        user = user.toObject();
+        delete user.password;
+        delete user.role;
+        delete user.isVerified
+
+        return res.redirect(`${config.FRONTEND_URL}`);
+    } catch (error) {
+        console.log("error in googleLoginController", error);
+        throw new AppError(500, "Internal Server Error !");
+    }
+})
+
+
+
+
+
+
+export const authController = { registerUserController, loginUserController, verifyAccountController, getMeController, logoutUserController, googleLoginController };
