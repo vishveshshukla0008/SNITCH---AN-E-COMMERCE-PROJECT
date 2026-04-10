@@ -201,14 +201,14 @@ const Signup = () => {
                       />
                     </svg>
                   }>
-                  Sign up with Google
+                  <a href="/api/auth/google">Sign up with Google</a>
                 </Button>
               </div>
             </form>
           </div>
 
           <div className="mt-8 text-center text-sm font-medium text-text-muted">
-            Already have an account?{" "}
+            Already have an account ?
             <Link
               to="/login"
               className="text-primary font-bold hover:underline">
