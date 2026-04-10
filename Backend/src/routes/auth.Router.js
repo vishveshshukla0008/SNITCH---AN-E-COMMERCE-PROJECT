@@ -12,7 +12,7 @@ authRouter.get("/verify/:token", tokenValidation, authController.verifyAccountCo
 
 authRouter.post("/login", loginValidation, authController.loginUserController)
 
-authRouter.get("/get-me", authUser, authController.getMeController);
+authRouter.get("/me", authUser, authController.getMeController);
 
 authRouter.post("/logout", authUser, authController.logoutUserController);
 

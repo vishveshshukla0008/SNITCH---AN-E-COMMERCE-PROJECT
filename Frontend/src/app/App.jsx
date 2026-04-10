@@ -1,47 +1,19 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect } from "react";
+import AppRoutes from "./AppRoutes";
+import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../features/Authentication/hook/useAuth";
 
 const App = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-  });
+  const dispatch = useDispatch();
 
-  const formRef = useRef(null);
+  const { authLoading, user } = useSelector((state) => state.auth);
+  const { getCurrentUser } = useAuth();
 
-  function handleChange(e) {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  }
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
 
-  function handleSubmit(e) {
-    e.preventDefault(); // for not refresing the page !
-    console.log(formData);
-    setFormData();
-  }
-
-  return (
-    <div>
-      <form onSubmit={handleSubmit} ref={formRef}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Enter your name"
-          value={formData.name}
-          onChange={handleChange}
-        />
-        <input
-          type="number"
-          name="phone"
-          placeholder="Enter your phone"
-          value={formData.phone}
-          onChange={handleChange}
-        />
-        <button>Submit</button>
-      </form>
-    </div>
-  );
+  return <AppRoutes />;
 };
 
 export default App;

@@ -24,3 +24,16 @@ export async function sendVerificationConfirmationEmail(user) {
         html: sendVerificationConfirmationTemplate(user.fullname),
     })
 }
+
+export async function sendForgetEmailToken(user) {
+    user.forgetToken = generateVerificationToken();
+    user.forgetTokenExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    const verificationLink = `${config.FRONTEND_URL}/api/auth/forget-password/${user.forgetToken}`;
+    await sendEmail({
+        to: user.email,
+        subject: "FORGET PASSWORD  - SNITCH",
+        html: sendVerificationTokenTemplate(user.fullname, verificationLink),
+    })
+}
