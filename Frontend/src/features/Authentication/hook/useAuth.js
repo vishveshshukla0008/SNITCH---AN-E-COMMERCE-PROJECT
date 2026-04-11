@@ -10,12 +10,11 @@ export const useAuth = () => {
     try {
       dispatch(setAuthLoading(true));
       const response = await authApi.register(userData);
-      dispatch(setUser(response.user));
       toast.success(response.message || "Account created successfully!");
       return response;
     } catch (error) {
       toast.error(error.message || "Registration failed");
-      return error;
+      return Promise.reject(error);
     } finally {
       dispatch(setAuthLoading(false));
     }
@@ -67,6 +66,21 @@ export const useAuth = () => {
     }
   };
 
-  return { handleRegister, loginHandler, logoutHandler, getCurrentUser };
+
+  const handleVerifyAccount = async (token) => {
+    try {
+      dispatch(setAuthLoading(true));
+      const response = await authApi.verifyAccount(token);
+      toast.success(response.message || "Account verified successfully!");
+      return response;
+    } catch (error) {
+      toast.error(error.message || "Account verification failed");
+      return error;
+    } finally {
+      dispatch(setAuthLoading(false));
+    }
+  };
+
+  return { handleRegister, loginHandler, logoutHandler, getCurrentUser, handleVerifyAccount };
 };
 

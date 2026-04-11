@@ -17,4 +17,8 @@ export const authApi = {
         const response = await api.get("/auth/me");
         return response;
     },
+    verifyAccount: async (token) => {
+        const response = await api.get(`/auth/verify/${token}`);
+        return response;
+    },
 }   

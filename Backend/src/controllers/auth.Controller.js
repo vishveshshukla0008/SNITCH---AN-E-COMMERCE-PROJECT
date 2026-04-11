@@ -23,6 +23,7 @@ const registerUserController = AsyncWrapper(async (req, res) => {
         fullname,
         password,
         role,
+        authProvider: "local"
     });
 
     await sendVerificationTokenEmail(user);
@@ -93,10 +94,6 @@ const logoutUserController = AsyncWrapper(async (req, res) => {
     return res.status(200).json({ success: true, message: "Logout successfully !" });
 });
 
-
-
-
-
 // Google Login Controller :
 
 const googleLoginController = AsyncWrapper(async (req, res) => {
@@ -113,7 +110,8 @@ const googleLoginController = AsyncWrapper(async (req, res) => {
                 fullname: googleUser.displayName,
                 avatar: googleUser.photos[0].value,
                 authProvider: "google",
-                isVerified: true
+                isVerified: true,
+                googleId: googleUser?.id
             })
         }
 
@@ -136,10 +134,6 @@ const googleLoginController = AsyncWrapper(async (req, res) => {
         throw new AppError(500, "Internal Server Error !");
     }
 })
-
-
-
-
 
 
 export const authController = { registerUserController, loginUserController, verifyAccountController, getMeController, logoutUserController, googleLoginController };

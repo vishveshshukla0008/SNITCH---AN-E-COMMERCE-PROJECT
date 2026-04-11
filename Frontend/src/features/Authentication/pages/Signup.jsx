@@ -1,15 +1,16 @@
+import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../hook/useAuth";
+import { useNavigate, Link, Navigate } from "react-router";
+import { FaGithub } from "react-icons/fa";
 import { useForm } from "react-hook-form";
-import { Link, Navigate } from "react-router";
 import Input from "../../../shared/components/input";
 import Button from "../../../shared/components/Button";
 import Loader from "../../../shared/components/Loader";
-import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../hook/useAuth";
 
 const Signup = () => {
   const { authLoading, user } = useSelector((state) => state.auth);
   const { handleRegister } = useAuth();
-
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -42,8 +43,15 @@ const Signup = () => {
   }
 
   const onSubmit = async (data) => {
-    const { confirmPassword, ...formData } = data;
-    await handleRegister(formData);
+    try {
+      const { confirmPassword, ...formData } = data;
+      await handleRegister(formData);
+      navigate("/verify-email-notice", {
+        state: { fromSignup: true, email: data.email },
+        replace: true,
+      });
+    } catch (error) {
+    }
   };
 
   return (
@@ -176,7 +184,7 @@ const Signup = () => {
                 </Button>
               </div>
 
-              <div className="sm:col-span-2">
+              <div className="sm:col-span-2 space-y-3">
                 <Button
                   variant="outline"
                   fullWidth
@@ -202,6 +210,14 @@ const Signup = () => {
                     </svg>
                   }>
                   <a href="/api/auth/google">Sign up with Google</a>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  fullWidth
+                  size="lg"
+                  leftIcon={<FaGithub className="w-5 h-5" />}>
+                  <a href="/api/auth/github">Sign up with Github</a>
                 </Button>
               </div>
             </form>
@@ -248,5 +264,4 @@ const Signup = () => {
     </div>
   );
 };
-
 export default Signup;
