@@ -1,7 +1,7 @@
 import { body, validationResult, param } from "express-validator";
 import { AppError } from "../utils/AppError.js";
 
-const validator = (req, res, next) => {
+export const validator = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new AppError(400, "Validation fields are missing !", errors.array());

@@ -55,7 +55,7 @@ const verifyAccountController = AsyncWrapper(async (req, res) => {
 
 const loginUserController = AsyncWrapper(async (req, res) => {
     const { identifier, password } = req.body;
-    let user = await userModel.findOne({ $or: [{ email: identifier }, { contact: identifier }] }).select("+password +role +isVerified");
+    let user = await userModel.findOne({ $or: [{ email: identifier }, { contact: identifier }] }).select("+password +isVerified");
 
     if (!user) throw new AppError(404, "User does not exist !");
     if (!user.isVerified) throw new AppError(401, "Account not verified ! please verify your account first !");
@@ -74,7 +74,6 @@ const loginUserController = AsyncWrapper(async (req, res) => {
 
     user = user.toObject();
     delete user.password;
-    delete user.role;
     delete user.isVerified
 
     return res.status(200).json({ success: true, message: "Login successfully !", user });

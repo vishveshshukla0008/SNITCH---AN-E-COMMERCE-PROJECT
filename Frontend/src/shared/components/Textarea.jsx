@@ -1,19 +1,19 @@
 import React from "react";
 
-const Input = React.forwardRef(
-  ({ label, type, placeholder, error, ...props }, ref) => {
+const Textarea = React.forwardRef(
+  ({ label, placeholder, error, rows = 4, ...props }, ref) => {
     return (
       <div className="w-full space-y-1.5 text-left">
         {label && (
-          <label className="text-sm font-medium text-text-muted mb-5">
+          <label className="text-sm font-medium text-text-muted mb-2">
             {label}
           </label>
         )}
-        <input
+        <textarea
           ref={ref}
-          type={type}
           placeholder={placeholder}
-          className={`w-full px-4 py-2.5 bg-bg-surface border rounded-xl outline-none transition-all duration-200 text-sm text-text placeholder:text-text-muted/50 ${
+          rows={rows}
+          className={`w-full px-4 py-2.5 bg-bg-surface border rounded-xl outline-none transition-all duration-200 text-sm text-text placeholder:text-text-muted/50 resize-none ${
             error
               ? "border-error ring-1 ring-error/50 focus:ring-2 focus:ring-error"
               : "border-border focus:ring-2 focus:ring-ring"
@@ -31,6 +31,6 @@ const Input = React.forwardRef(
   },
 );
 
-Input.displayName = "Input";
+Textarea.displayName = "Textarea";
 
-export default Input;
+export default Textarea;
