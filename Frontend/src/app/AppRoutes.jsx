@@ -6,6 +6,7 @@ import VerifyEmailNotice from "../features/Authentication/pages/VerifyEmailNotic
 import VerifyEmailSuccess from "../features/Authentication/pages/VerifyEmailSuccess";
 import Home from "../pages/Home";
 import CreateProductPage from "../features/products/pages/CreateProductPage";
+import { SellerProtect } from "../features/Authentication/components/SellerProtect";
 
 const AppRoutes = () => {
   return (
@@ -20,7 +21,15 @@ const AppRoutes = () => {
           {/* <Route path="seller" element={<SellerLayout />}> */}
           {/* <Route index element={<Dashboard />} /> */}
           {/* <Route path="products" element={<Products />} /> */}
-          <Route path="products/create" element={<CreateProductPage />} />
+          // Route
+          <Route
+            path="products/create"
+            element={
+              <SellerProtect>
+                <CreateProductPage />
+              </SellerProtect>
+            }
+          />
           {/* <Route path="products/:id" element={<EditProduct />} /> */}
           {/* <Route path="orders" element={<Orders />} /> */}
           {/* <Route path="users" element={<Users />} /> */}

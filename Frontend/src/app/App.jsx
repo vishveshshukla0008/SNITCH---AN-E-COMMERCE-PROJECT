@@ -1,14 +1,11 @@
 import React, { useEffect } from "react";
 import AppRoutes from "./AppRoutes";
-import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../features/Authentication/hook/useAuth";
+import { useSelector } from "react-redux";
 
 const App = () => {
-  const dispatch = useDispatch();
-
-  const { authLoading, user } = useSelector((state) => state.auth);
   const { getCurrentUser } = useAuth();
-
+  const { user } = useSelector((state) => state.auth);
   useEffect(() => {
     getCurrentUser();
   }, []);

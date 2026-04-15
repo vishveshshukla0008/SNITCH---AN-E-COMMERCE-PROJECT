@@ -20,7 +20,7 @@ export const authUser = AsyncWrapper(async (req, res, next) => {
         throw new AppError(401, "Token expired or invalid ! Please login again !");
     }
 
-    const user = await userModel.findById(decode.userId);
+    const user = await userModel.findById(decode.userId).select("+role");
     if (!user) throw new AppError(404, "User not found !");
 
     req.user = user;
@@ -48,10 +48,12 @@ export const authSeller = AsyncWrapper(async (req, res, next) => {
     const user = await userModel.findById(decode.userId).select("+role");
 
     if (!user) throw new AppError(404, "User not found !");
-    
+
     if (user.role !== "seller") {
         throw new AppError(403, "Unauthorized ! You are not a seller !");
     }
+
+    console.log(user);
 
     req.user = user;
     next();

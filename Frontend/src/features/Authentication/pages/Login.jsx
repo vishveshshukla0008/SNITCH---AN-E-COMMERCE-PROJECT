@@ -169,7 +169,7 @@ const Login = () => {
               <span className="block text-primary-foreground text-sm font-bold uppercase tracking-widest mb-1">
                 New Collection
               </span>
-              <h2 className="text-5xl font-black text-primary-foreground tracking-tighter">
+              <h2 className="text-5xl font-extrabold text-primary-foreground tracking-tighter">
                 UNLIMITED STYLE
               </h2>
             </div>
@@ -180,7 +180,7 @@ const Login = () => {
           </div>
 
           {/* Bottom attribution/image credit style */}
-          <div className="absolute bottom-10 w-full flex justify-center text-primary-foreground/60 text-xs font-bold uppercase tracking-widest">
+          <div className="absolute bottom-10 w-full flex justify-center text-primary-foreground/60 text-sm font-extrabold uppercase tracking-widest">
             © 2024 SNITCH STUDIO. ALL RIGHTS RESERVED.
           </div>
         </div>
