@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
-import { createProduct } from '../services/product.api';
-import { setProductLoading } from '../state/product.slice';
+import { createProduct, getAllSellerProducts } from '../services/product.api';
+import { setProductLoading, setSellerProducts } from '../state/product.slice';
 import toast from 'react-hot-toast';
 
 
@@ -22,9 +22,23 @@ const useProduct = () => {
         }
     }
 
+    const handleGetAllSellerProducts = async () => {
+        try {
+            dispatch(setProductLoading(true));
+            const response = await getAllSellerProducts();
+            dispatch(setSellerProducts(response.data));
+            return response.data;
+        } catch (error) {
+            toast.error(error.message);
+            return error;
+        } finally {
+            dispatch(setProductLoading(false));
+        }
+    }
 
 
-    return { handleCreateProductHandler }
+
+    return { handleCreateProductHandler, handleGetAllSellerProducts }
 }
 
 export default useProduct

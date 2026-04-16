@@ -78,8 +78,9 @@ const createProduct = AsyncWrapper(async (req, res) => {
  * @route GET /api/products/getAllProducts
  * @access Private (Seller/Admin)
  */
+
 const getAllSellingProducts = AsyncWrapper(async (req, res) => {
-    const allProducts = await productModel.find({ seller: req.user._id });
+    const allProducts = await productModel.find({ createdBy: req.user._id });
     return res.status(200).json({ success: true, message: "Products has been fetched Sccuessfully !", data: allProducts });
 })
 

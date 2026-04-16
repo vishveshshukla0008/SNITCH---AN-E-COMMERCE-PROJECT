@@ -12,7 +12,7 @@ export async function createProduct(formData) {
 }
 
 export async function getAllSellerProducts() {
-    const response = await api.post("/products/getAllProducts");
+    const response = await api.get("/products/getAllProducts");
     return response;
 }
 

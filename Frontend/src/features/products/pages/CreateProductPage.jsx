@@ -168,7 +168,7 @@ const CreateProductPage = () => {
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-8 border-b border-border/50">
           <div>
-            <h1 className="text-4xl font-black text-text tracking-tighter uppercase">
+            <h1 className="text-4xl font-black text-text -tracking-normal lg:tracking-wider uppercase">
               SELL PRODUCT
             </h1>
             <p className="text-text-muted text-sm font-medium mt-1">

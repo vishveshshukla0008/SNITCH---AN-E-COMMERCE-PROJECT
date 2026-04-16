@@ -7,6 +7,7 @@ import VerifyEmailSuccess from "../features/Authentication/pages/VerifyEmailSucc
 import Home from "../pages/Home";
 import CreateProductPage from "../features/products/pages/CreateProductPage";
 import { SellerProtect } from "../features/Authentication/components/SellerProtect";
+import Dashboard from "../features/products/pages/Dashboard";
 
 const AppRoutes = () => {
   return (
@@ -21,12 +22,19 @@ const AppRoutes = () => {
           {/* <Route path="seller" element={<SellerLayout />}> */}
           {/* <Route index element={<Dashboard />} /> */}
           {/* <Route path="products" element={<Products />} /> */}
-          // Route
           <Route
             path="products/create"
             element={
               <SellerProtect>
                 <CreateProductPage />
+              </SellerProtect>
+            }
+          />
+          <Route
+            path="products/dashboard"
+            element={
+              <SellerProtect>
+                <Dashboard />
               </SellerProtect>
             }
           />
