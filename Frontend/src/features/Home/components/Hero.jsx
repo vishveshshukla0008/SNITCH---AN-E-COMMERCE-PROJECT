@@ -34,9 +34,9 @@ const Hero = () => {
               </span>
             </div>
 
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[110px] font-black tracking-tighter text-text leading-[0.85] uppercase">
+            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[110px] font-bold tracking-tighter text-text leading-[0.85] uppercase">
               SILENT <br />
-              <span className="text-primary italic">LUXURY</span>
+              <span className="text-primary font-extrabold">LUXURY</span>
             </h1>
 
             <p className="text-text-muted text-base md:text-lg font-medium max-w-md mt-4 leading-relaxed tracking-tight">
@@ -45,16 +45,16 @@ const Hero = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-6">
+          <div className="flex items-center gap-3">
             <Button
-              size="lg"
-              className="rounded-none px-16 py-8 text-sm uppercase tracking-[0.2em] shadow-none  hover:bg-primary transition-all duration-500">
+              size="md"
+              className="rounded-xl px-16 py-6 text-sm uppercase -tracking-tighter shadow-none  hover:bg-primary transition-all duration-500">
               EXPLORE COLLECTION
             </Button>
             <Button
               variant="outline"
-              size="lg"
-              className="rounded-none px-16 py-8 text-sm uppercase tracking-[0.2em] border-2 border-text/10 hover:border-primary transition-all duration-500">
+              size="md"
+              className="rounded-xl px-16 py-6 text-sm uppercase tracking-widest border-2 border-text/10 hover:border-primary hover:bg-primary hover:text-white transition-all duration-500">
               LOOKBOOK
             </Button>
           </div>

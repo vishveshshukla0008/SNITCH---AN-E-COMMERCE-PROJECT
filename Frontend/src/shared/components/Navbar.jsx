@@ -18,7 +18,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const { user } = useSelector((state) => state.auth);
+  const user = useSelector((state) => state.auth.user);
   const { logoutHandler } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -50,13 +50,22 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
+  const userLinks = [
     { name: "Shop", path: "/shop" },
     { name: "Collections", path: "/collections" },
     { name: "New Drops", path: "/new" },
     { name: "About", path: "/about" },
   ];
 
+  const sellerLinks = [
+    { name: "Sell New Product", path: "/products/create" },
+    { name: "Dashboard", path: "/products/dashboard" },
+    { name: "Orders", path: "/orders" },
+    { name: "Profile", path: "/profile" },
+    { name: "About", path: "/about" },
+  ];
+
+  const navLinks = user?.role === "seller" ? sellerLinks : userLinks;
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-100 transition-all duration-500 px-4 sm:px-8 py-4 ${

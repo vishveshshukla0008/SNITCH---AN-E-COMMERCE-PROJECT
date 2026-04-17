@@ -27,8 +27,8 @@ const Login = () => {
     return <Loader />;
   }
 
-  if (user) {
-    return <Navigate to="/" />;
+  if (user&& user.role === "seller") {
+    return <Navigate to="/products/dashboard" replace/>;
   }
 
   const onSubmit = async (data) => {

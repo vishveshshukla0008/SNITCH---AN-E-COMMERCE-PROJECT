@@ -41,7 +41,7 @@ const Button = ({
     <button
       type={type}
       disabled={disabled || isLoading}
-      className={`relative inline-flex items-center justify-center gap-2 rounded-xl transition-all duration-300 ${variantClasses} ${sizeClasses} ${widthClasses} ${disabledClasses} ${className}`}
+      className={`relative inline-flex items-center justify-center gap-2 rounded-md transition-all duration-300 ${variantClasses} ${sizeClasses} ${widthClasses} ${disabledClasses} ${className}`}
       {...props}
     >
       {isLoading ? (
