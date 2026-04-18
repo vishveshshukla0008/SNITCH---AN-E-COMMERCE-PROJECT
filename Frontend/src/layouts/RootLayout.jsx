@@ -7,7 +7,7 @@ const RootLayout = () => {
   const theme = document.body.getAttribute("data-theme");
 
   return (
-    <div className="min-h-screen w-full bg-bg text-text relative">
+    <div className="min-h-screen w-full bg-bg text-text relative overflow-x-hidden">
       <FallingStars />
       <Navbar />
       <Toaster

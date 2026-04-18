@@ -14,7 +14,7 @@ import {
 import { BiReset } from "react-icons/bi";
 
 // Importing UI components from shared folder
-import Input from "../../../shared/components/Input";
+import Input from "../../../shared/components/input";
 import Textarea from "../../../shared/components/Textarea";
 import Checkbox from "../../../shared/components/Checkbox";
 import Button from "../../../shared/components/Button";
@@ -62,20 +62,25 @@ const PasswordModal = ({ isOpen, onClose, onSubmit }) => {
 };
 
 const ProductDetails = () => {
+  const [product, setProduct] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
-  const { handleGetAllSellerProducts } = useProduct();
+
+  const { handleGetSellersSingleProduct } = useProduct();
 
   const [formData, setFormData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    handleGetAllSellerProducts();
-  }, []);
+  async function fetchProduct() {
+    const data = await handleGetSellersSingleProduct(id);
+    setProduct(data);
+  }
 
-  const productStates = useSelector((state) => state.product);
-  const { sellerAllProducts, productLoading } = productStates;
-  const product = sellerAllProducts?.find((item) => item._id === id);
+  const productLoading = useSelector((state) => state.product.productLoading);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
 
   useEffect(() => {
     if (product) {
@@ -111,7 +116,6 @@ const ProductDetails = () => {
     });
   }
 
-  console.log(product);
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

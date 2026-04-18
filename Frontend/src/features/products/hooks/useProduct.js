@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux';
-import { createProduct, getAllSellerProducts } from '../services/product.api';
+import { createProduct, getAllSellerProducts, getSellersSingleProduct } from '../services/product.api';
 import { setProductLoading, setSellerProducts } from '../state/product.slice';
 import toast from 'react-hot-toast';
 
@@ -37,8 +37,20 @@ const useProduct = () => {
     }
 
 
+    const handleGetSellersSingleProduct = async (id) => {
+        try {
+            dispatch(setProductLoading(true));
+            const response = await getSellersSingleProduct(id);
+            return response.data;
+        } catch (error) {
+            toast.error(error.message);
+            return error;
+        } finally {
+            dispatch(setProductLoading(false));
+        }
+    }
 
-    return { handleCreateProductHandler, handleGetAllSellerProducts }
+    return { handleCreateProductHandler, handleGetAllSellerProducts, handleGetSellersSingleProduct }
 }
 
 export default useProduct

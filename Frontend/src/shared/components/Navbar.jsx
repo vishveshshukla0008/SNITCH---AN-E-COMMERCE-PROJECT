@@ -19,6 +19,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
 
   const user = useSelector((state) => state.auth.user);
+  const authLoading = useSelector((state) => state.auth.authLoading);
   const { logoutHandler } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -136,6 +137,8 @@ const Navbar = () => {
 
           {user ? (
             <AvatarDropdown user={user} onLogout={handleLogout} />
+          ) : authLoading ? (
+            <div className="w-10 h-10 rounded-full bg-bg-muted animate-pulse" />
           ) : (
             <Link
               to="/login"

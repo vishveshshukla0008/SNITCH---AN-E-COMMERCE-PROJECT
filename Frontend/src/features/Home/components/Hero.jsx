@@ -3,7 +3,7 @@ import Button from "../../../shared/components/Button";
 
 const Hero = () => {
   return (
-    <section className="relative h-screen min-h-[700px] w-full flex items-center overflow-hidden font-sans bg-bg">
+    <section className="relative h-[calc(100vh-80px)] min-h-[700px] w-full flex items-center overflow-hidden font-sans bg-bg">
       {/* Editorial Split Layout */}
       <div className="absolute inset-0 z-0 flex flex-col lg:flex-row">
         {/* Text Side (Mobile Background) */}

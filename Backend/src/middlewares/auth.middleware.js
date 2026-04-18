@@ -3,6 +3,7 @@ import { AsyncWrapper } from "../utils/AsyncWrapper.js";
 import { verifyToken } from "../utils/jwt.Utils.js";
 import { AppError } from "../utils/AppError.js";
 import { getRedis } from "../config/cache.js";
+import { productModel } from "../models/product.model.js";
 
 export const authUser = AsyncWrapper(async (req, res, next) => {
     const token = req.cookies?.token;
@@ -56,5 +57,17 @@ export const authSeller = AsyncWrapper(async (req, res, next) => {
     console.log(user);
 
     req.user = user;
+    next();
+})
+
+
+export const isProductOwner = AsyncWrapper(async (req, res, next) => {
+    const { id } = req.params;
+    const product = await productModel.findById(id);
+
+    if (!product) throw new AppError(404, "Product not found !");
+    if (!product.createdBy.equals(req.user._id)) throw new AppError(401, "This product is not yours !");
+
+    req.product = product;
     next();
 })

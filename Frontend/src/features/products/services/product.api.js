@@ -16,3 +16,8 @@ export async function getAllSellerProducts() {
     return response;
 }
 
+
+export async function getSellersSingleProduct(id) {
+    const response = await api.get(`/products/${id}`);
+    return response;
+}

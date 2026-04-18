@@ -2,7 +2,7 @@ import React from "react";
 
 const FallingStars = () => {
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 select-none">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
       <div className="stars-container absolute inset-0">
         {/* Twinkling Stars */}
         {[...Array(40)].map((_, i) => {

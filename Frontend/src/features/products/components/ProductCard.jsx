@@ -31,7 +31,7 @@ function ProductCard({ product, onView }) {
           };
 
   return (
-    <div className="group flex flex-col bg-bg-surface rounded-2xl overflow-hidden border border-border transition-all duration-300 hover:sha dow-2xl hover:shadow-black/5 hover:-translate-y-1">
+    <div className="group flex flex-col bg-bg-surface rounded-2xl overflow-hidden border border-border transition-all duration-300 hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
       {/* Image Container */}
       <div className="relative overflow-hidden bg-bg-muted">
         <img

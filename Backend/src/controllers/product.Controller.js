@@ -84,4 +84,17 @@ const getAllSellingProducts = AsyncWrapper(async (req, res) => {
     return res.status(200).json({ success: true, message: "Products has been fetched Sccuessfully !", data: allProducts });
 })
 
-export const productController = { createProduct, getAllSellingProducts };
+
+/**
+ * @desc Get a single Product to seller when seller is logged in and seller is product Owner
+ * @route GET /api/products/:id
+ * @access Private (Seller/Admin)
+ */
+
+const getSingleProduct = AsyncWrapper(async (req, res) => {
+    const product = req.product;
+    return res.status(200).json({ success: true, message: "Product has been fetched Sccuessfully !", data: product });
+})
+
+
+export const productController = { createProduct, getAllSellingProducts, getSingleProduct };
