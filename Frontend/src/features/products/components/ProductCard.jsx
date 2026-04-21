@@ -72,15 +72,9 @@ function ProductCard({ product, onView }) {
           <div className="flex items-center gap-1.5 bg-bg-muted px-2 py-1 rounded-md">
             <span>Total Stock : </span>
             <span className="font-medium">
-              {product?.totalStock ?? "implement stock"}
+              {product?.totalStock ?? ""}
             </span>
           </div>
-          {/* <div className="flex items-center gap-1.5 bg-bg-muted px-2 py-1 rounded-md">
-            <FiTag className="w-4 h-4" />
-            <span className="font-medium">
-              {product?.variants?.[0]?.size || "No Size"}
-            </span>
-          </div> */}
            <div className="flex items-center w-fit gap-1.5 bg-bg-muted px-2 py-1 rounded-md">
           <span className="text-text-muted text-sm">Variants :</span>
           <span className="font-medium text-sm">
@@ -98,7 +92,7 @@ function ProductCard({ product, onView }) {
               </span>
               {product?.discount > 0 && (
                 <span className="text-sm text-text-muted line-through">
-                  {product?.price?.amount / (1 - product?.discount / 100)}
+                  {product?.variants[0]?.price?.amount / (1 - product?.discount / 100)}
                 </span>
               )}
             </div>

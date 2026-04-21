@@ -116,4 +116,33 @@ const getSingleProduct = AsyncWrapper(async (req, res) => {
 })
 
 
-export const productController = { createProduct, getAllSellingProducts, getSingleProduct };
+
+
+//==============================Public API Controllers=======================
+
+
+
+const getPublicProducts = AsyncWrapper(async (req, res) => {
+    const products = await productModel.find({});
+    return res.status(200).json({ success: true, message: "Products has been fetched Sccuessfully !", data: products });
+});
+
+const getPublicSingleProduct = AsyncWrapper(async (req, res) => {
+    const product = await productModel.findById(req.params.id);
+    if (!product) {
+        throw new AppError("Product not found", 404);
+    }
+    return res.status(200).json({ success: true, message: "Product has been fetched Sccuessfully !", data: product });
+});
+
+
+export const productController = { createProduct, getAllSellingProducts, getSingleProduct, getPublicProducts, getPublicSingleProduct };
+
+
+
+
+
+
+
+
+

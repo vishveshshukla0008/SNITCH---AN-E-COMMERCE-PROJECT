@@ -11,6 +11,8 @@ import { Protect } from "../features/Authentication/components/Protect";
 import CreateProductPage from "../features/products/pages/CreateProductPage";
 import Dashboard from "../features/products/pages/Dashboard";
 import ProductDetails from "../features/products/pages/ProductDetails";
+import Products from "../features/products/pages/public/Products";
+import PublicProductDetails from "../features/products/pages/public/PublicProductDetails";
 
 const sellerRoutes = [
   {
@@ -38,6 +40,8 @@ const AppRoutes = () => {
           <Route path="verify-email-notice" element={<VerifyEmailNotice />} />
           <Route path="verify/:token" element={<VerifyEmailSuccess />} />
 
+          <Route path="collections" element={<Products />} />
+          <Route path="collections/:id" element={<PublicProductDetails />} />
           {sellerRoutes.map(({ path, element }) => (
             <Route
               key={path}

@@ -168,7 +168,7 @@ const ProductDetails = () => {
     });
     setIsModalOpen(false);
     alert(
-      "Changes logged to console successfully! Check your browser console to see the updated data structure."
+      "Changes logged to console successfully! Check your browser console to see the updated data structure.",
     );
   };
 
@@ -183,6 +183,12 @@ const ProductDetails = () => {
       minute: "2-digit",
     });
   };
+
+  const [selectedImages, setSelectedImages] = useState({});
+
+  function handleImageClick(variantId, url) {
+    setSelectedImages((prev) => ({ ...prev, [variantId]: url }));
+  }
 
   if (productLoading) return <Loader />;
 
@@ -221,7 +227,11 @@ const ProductDetails = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button size="md" variant="outline" onClick={resetForm} leftIcon={<BiReset />}>
+          <Button
+            size="md"
+            variant="outline"
+            onClick={resetForm}
+            leftIcon={<BiReset />}>
             Reset
           </Button>
           <Button
@@ -312,7 +322,8 @@ const ProductDetails = () => {
                         className="w-10 h-10 rounded-full border-2 border-border shadow-inner"
                         style={{
                           backgroundColor:
-                            variant.attributes?.color?.toLowerCase() || "transparent",
+                            variant.attributes?.color?.toLowerCase() ||
+                            "transparent",
                         }}
                       />
                       <div>
@@ -344,9 +355,10 @@ const ProductDetails = () => {
                   <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
                     {/* Variant Images */}
                     <div className="md:col-span-4 space-y-4">
-                      <div className="aspect-[3/4] w-full bg-bg-muted rounded-xl border border-border overflow-hidden relative group">
+                      <div className="aspect-3/4 w-full bg-bg-muted rounded-xl border border-border overflow-hidden relative group">
                         <img
                           src={
+                            selectedImages[variant._id] ||
                             variant.images?.[0]?.url ||
                             "https://placehold.co/600x800?text=No+Image"
                           }
@@ -358,22 +370,20 @@ const ProductDetails = () => {
                         </button>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
-                        {variant.images?.slice(1, 5).map((img, i) => (
+                        {variant.images?.map((img, i) => (
                           <div
                             key={i}
                             className="aspect-square bg-bg-muted rounded-lg border border-border overflow-hidden">
                             <img
+                              onClick={() =>
+                                handleImageClick(variant._id, img.url)
+                              }
                               src={img.thumbnailUrl || img.url}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover cursor-pointer"
                               alt=""
                             />
                           </div>
                         ))}
-                        {variant.images?.length > 5 && (
-                          <div className="aspect-square bg-bg-muted rounded-lg border border-border flex items-center justify-center text-xs font-bold text-text-muted">
-                            +{variant.images.length - 5}
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -388,7 +398,7 @@ const ProductDetails = () => {
                             handleVariantChange(
                               variant._id,
                               "price.amount",
-                              Number(e.target.value)
+                              Number(e.target.value),
                             )
                           }
                         />
@@ -400,7 +410,7 @@ const ProductDetails = () => {
                             handleVariantChange(
                               variant._id,
                               "price.discountPrice",
-                              Number(e.target.value)
+                              Number(e.target.value),
                             )
                           }
                         />
@@ -415,7 +425,7 @@ const ProductDetails = () => {
                             handleVariantChange(
                               variant._id,
                               "stock",
-                              Number(e.target.value)
+                              Number(e.target.value),
                             )
                           }
                         />
@@ -428,7 +438,7 @@ const ProductDetails = () => {
                             handleVariantChange(
                               variant._id,
                               "weight",
-                              Number(e.target.value)
+                              Number(e.target.value),
                             )
                           }
                         />
@@ -439,7 +449,7 @@ const ProductDetails = () => {
                             handleVariantChange(
                               variant._id,
                               "attributes.color",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                         />
@@ -458,7 +468,7 @@ const ProductDetails = () => {
                               handleVariantChange(
                                 variant._id,
                                 "dimensions.length",
-                                Number(e.target.value)
+                                Number(e.target.value),
                               )
                             }
                           />
@@ -470,7 +480,7 @@ const ProductDetails = () => {
                               handleVariantChange(
                                 variant._id,
                                 "dimensions.width",
-                                Number(e.target.value)
+                                Number(e.target.value),
                               )
                             }
                           />
@@ -482,7 +492,7 @@ const ProductDetails = () => {
                               handleVariantChange(
                                 variant._id,
                                 "dimensions.height",
-                                Number(e.target.value)
+                                Number(e.target.value),
                               )
                             }
                           />
@@ -515,7 +525,9 @@ const ProductDetails = () => {
                   label="New Arrival"
                   description="Mark as a new collection item."
                   checked={formData.isNewProduct}
-                  onChange={(e) => handleChange("isNewProduct", e.target.checked)}
+                  onChange={(e) =>
+                    handleChange("isNewProduct", e.target.checked)
+                  }
                 />
               </div>
               <div className="p-4 bg-bg-muted/30 rounded-xl border border-border/50">
@@ -541,7 +553,9 @@ const ProductDetails = () => {
                 </p>
                 <div className="flex items-center gap-2 text-lg font-bold">
                   {product?.averageRating || "0.0"}
-                  <div className="text-yellow-500 text-sm flex">{"★".repeat(Math.round(product?.averageRating || 0))}</div>
+                  <div className="text-yellow-500 text-sm flex">
+                    {"★".repeat(Math.round(product?.averageRating || 0))}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-4 pt-4 border-t border-border">
@@ -561,7 +575,9 @@ const ProductDetails = () => {
                   <p className="text-[10px] uppercase font-bold text-text-muted mb-1">
                     Seller ID
                   </p>
-                  <p className="text-xs font-mono bg-bg-muted p-1.5 rounded">{product?.createdBy}</p>
+                  <p className="text-xs font-mono bg-bg-muted p-1.5 rounded">
+                    {product?.createdBy}
+                  </p>
                 </div>
               </div>
             </div>

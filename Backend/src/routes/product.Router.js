@@ -17,4 +17,10 @@ productRouter.get("/getAllProducts", authUser, productController.getAllSellingPr
 
 productRouter.get("/:id", authUser, isProductOwner, productController.getSingleProduct);
 
+
+
+// ==================== Public Routes ====================
+productRouter.get("/", productController.getPublicProducts);
+productRouter.get("/public/:id", productController.getPublicSingleProduct);
+
 export default productRouter;

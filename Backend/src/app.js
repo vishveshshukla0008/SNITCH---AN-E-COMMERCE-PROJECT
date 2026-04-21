@@ -2,6 +2,7 @@ import express from "express";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import authRoutes from "./routes/auth.Router.js";
 import productRoutes from "./routes/product.Router.js";
+import cartRoutes from "./routes/cart.Router.js";
 import cookieParser from "cookie-parser";
 import { emailTransporter } from "./services/email.Service.js";
 import morgan from "morgan";
@@ -30,4 +31,5 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRoutes)
 app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
 app.use(errorHandler)
