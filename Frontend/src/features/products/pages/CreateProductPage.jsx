@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useState } from "react";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 import {
@@ -7,11 +7,10 @@ import {
   HiOutlineXMark,
   HiOutlinePlus,
   HiOutlineTag,
-  HiOutlineCurrencyRupee,
   HiOutlineInformationCircle,
   HiOutlineViewColumns,
-  HiOutlineCalendar,
   HiOutlineStar,
+  HiOutlineTrash,
 } from "react-icons/hi2";
 
 import Input from "../../../shared/components/Input";
@@ -22,9 +21,66 @@ import Checkbox from "../../../shared/components/Checkbox";
 import Badge from "../../../shared/components/Badge";
 import useProduct from "../hooks/useProduct";
 
+const VariantAttributes = ({ control, register, variantIndex, errors }) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `variants.${variantIndex}.attributes`,
+  });
+
+  return (
+    <div className="space-y-3 mt-4">
+      <div className="flex justify-between items-center">
+        <label className="text-sm font-bold text-text">Attributes</label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => append({ key: "", value: "" })}
+          className="text-xs py-1 px-2">
+          <HiOutlinePlus className="w-3 h-3 mr-1 inline" /> Add Attribute
+        </Button>
+      </div>
+      {fields.map((item, index) => (
+        <div key={item.id} className="flex gap-3 items-start">
+          <div className="flex-1">
+            <Input
+              placeholder="e.g. Size"
+              {...register(`variants.${variantIndex}.attributes.${index}.key`, {
+                required: "Key required",
+              })}
+              error={
+                errors?.variants?.[variantIndex]?.attributes?.[index]?.key
+                  ?.message
+              }
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              placeholder="e.g. XL"
+              {...register(
+                `variants.${variantIndex}.attributes.${index}.value`,
+                { required: "Value required" },
+              )}
+              error={
+                errors?.variants?.[variantIndex]?.attributes?.[index]?.value
+                  ?.message
+              }
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => remove(index)}
+            className="p-3 mt-1 bg-error/10 text-error rounded-xl hover:bg-error/20 transition-colors">
+            <HiOutlineTrash className="w-5 h-5" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const CreateProductPage = () => {
   const [tagInput, setTagInput] = useState("");
-  const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
   const { handleCreateProductHandler } = useProduct();
@@ -34,11 +90,10 @@ const CreateProductPage = () => {
     handleSubmit,
     watch,
     control,
-    setError,
     formState: { errors, isValid, isSubmitting },
     reset,
     setValue,
-    trigger,
+    getValues,
   } = useForm({
     mode: "onChange",
     defaultValues: {
@@ -47,40 +102,46 @@ const CreateProductPage = () => {
       brand: "Generic",
       category: "",
       subCategory: "",
-      price: {
-        amount: "",
-        discountPrice: "",
-        currency: "INR",
-      },
       tags: [],
-      images: [],
       isFeatured: false,
-      isNewProduct: false,
+      isNewProduct: true,
       isSale: false,
       averageRating: 0,
+      variants: [
+        {
+          stock: 0,
+          isDefault: true,
+          attributes: [{ key: "Size", value: "" }],
+          price: { amount: "", discountPrice: 0, currency: "INR" },
+          weight: 0,
+          dimensions: { length: 0, width: 0, height: 0 },
+          status: "Active",
+          images: [],
+        },
+      ],
     },
   });
 
-  // Register internal fields that don't have a direct input element
-  useEffect(() => {
-    register("images", {
-      validate: (val) => {
-        if (!val || val.length < 5) return "Minimum 5 images required";
-        if (val.length > 10) return "Maximum 10 images exceeded";
-        return true;
-      },
-    });
-  }, [register]);
-
-  const images = watch("images");
   const isSale = watch("isSale");
+  const variantsData = watch("variants");
 
-  const handleImageChange = (e) => {
+  const {
+    fields: variantFields,
+    append: appendVariant,
+    remove: removeVariant,
+  } = useFieldArray({
+    control,
+    name: "variants",
+  });
+
+  const handleImageChange = (e, index) => {
     const files = Array.from(e.target.files);
     const validFiles = files.filter((file) => file.type.startsWith("image/"));
 
-    if (images.length + validFiles.length > 10) {
-      toast.error("You can only upload up to 10 images");
+    const currentImages = getValues(`variants.${index}.images`) || [];
+
+    if (currentImages.length + validFiles.length > 10) {
+      toast.error("You can only upload up to 10 images per variant");
       return;
     }
 
@@ -89,17 +150,20 @@ const CreateProductPage = () => {
       url: URL.createObjectURL(file),
     }));
 
-    const updatedImages = [...images, ...newImages];
-    setValue("images", updatedImages);
-    trigger("images");
+    const updatedImages = [...currentImages, ...newImages];
+    setValue(`variants.${index}.images`, updatedImages, {
+      shouldValidate: true,
+    });
   };
 
-  const removeImage = (index) => {
-    const updatedImages = [...images];
-    URL.revokeObjectURL(updatedImages[index].url);
-    updatedImages.splice(index, 1);
-    setValue("images", updatedImages);
-    trigger("images");
+  const removeImage = (variantIndex, imageIndex) => {
+    const currentImages = getValues(`variants.${variantIndex}.images`) || [];
+    const updatedImages = [...currentImages];
+    URL.revokeObjectURL(updatedImages[imageIndex].url);
+    updatedImages.splice(imageIndex, 1);
+    setValue(`variants.${variantIndex}.images`, updatedImages, {
+      shouldValidate: true,
+    });
   };
 
   const handleAddTag = (e, field) => {
@@ -115,51 +179,96 @@ const CreateProductPage = () => {
   const onSubmit = async (data) => {
     const formData = new FormData();
 
-    // 🔹 1. Images (IMPORTANT)
-    if (data.images?.length) {
-      data.images.forEach((img) => {
-        formData.append("images", img.file); // only file
-      });
-    }
-
-    // 🔹 2. Basic Fields
+    // Basic Fields
     formData.append("title", data.title);
     formData.append("description", data.description);
     formData.append("brand", data.brand);
     formData.append("category", data.category);
     formData.append("subCategory", data.subCategory);
 
-    // 🔹 3. Nested Object (price)
-    formData.append("price[amount]", data.price.amount);
-    formData.append("price[discountPrice]", data.price.discountPrice);
-    formData.append("price[currency]", data.price.currency);
-
-    // 🔹 4. Tags (Array)
+    // Tags
     if (data.tags?.length) {
       data.tags.forEach((tag) => {
         formData.append("tags[]", tag);
       });
     }
 
-    // 🔹 5. Booleans (Ensuring string conversion)
+    // Booleans
     formData.append("isFeatured", String(data.isFeatured));
     formData.append("isNewProduct", String(data.isNewProduct));
     formData.append("isSale", String(data.isSale));
 
-    // 🔹 6. Date
-    if (data.saleEndDate) {
-      formData.append("saleEndDate", data.saleEndDate);
-    }
-
-    // 🔹 7. Optional Rating
-    if (data.averageRating) {
+    if (data.saleEndDate) formData.append("saleEndDate", data.saleEndDate);
+    if (data.averageRating)
       formData.append("averageRating", data.averageRating);
+
+    // Variants
+    if (data.variants?.length) {
+      data.variants.forEach((variant, index) => {
+        formData.append(`variants[${index}][stock]`, variant.stock);
+        formData.append(
+          `variants[${index}][isDefault]`,
+          String(variant.isDefault),
+        );
+        formData.append(`variants[${index}][weight]`, variant.weight || 0);
+        formData.append(`variants[${index}][status]`, variant.status);
+        formData.append(
+          `variants[${index}][price][amount]`,
+          variant.price.amount,
+        );
+        formData.append(
+          `variants[${index}][price][discountPrice]`,
+          variant.price.discountPrice || 0,
+        );
+        formData.append(
+          `variants[${index}][price][currency]`,
+          variant.price.currency,
+        );
+
+        if (variant.dimensions) {
+          formData.append(
+            `variants[${index}][dimensions][length]`,
+            variant.dimensions.length || 0,
+          );
+          formData.append(
+            `variants[${index}][dimensions][width]`,
+            variant.dimensions.width || 0,
+          );
+          formData.append(
+            `variants[${index}][dimensions][height]`,
+            variant.dimensions.height || 0,
+          );
+        }
+
+        // Attributes
+        if (variant.attributes?.length) {
+          variant.attributes.forEach((attr) => {
+            if (attr.key && attr.value) {
+              formData.append(
+                `variants[${index}][attributes][${attr.key}]`,
+                attr.value,
+              );
+            }
+          });
+        }
+
+        // Images
+        if (variant.images?.length) {
+          variant.images.forEach((img) => {
+            formData.append(`variants[${index}][images]`, img.file);
+          });
+        }
+      });
     }
 
     try {
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
       await handleCreateProductHandler(formData);
-      reset();
-      navigate("/");
+
+      // reset();
+      // navigate("/");
     } catch (error) {}
   };
 
@@ -192,103 +301,8 @@ const CreateProductPage = () => {
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Main Content Area */}
           <div className="lg:col-span-8 space-y-10">
-            {/* Image Gallery Section */}
-            <section className="bg-bg-surface border border-border rounded-3xl p-8 shadow-2xl shadow-black/5">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <HiOutlineCloudArrowUp className="w-6 h-6 " />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-text uppercase tracking-tight">
-                    Product Gallery
-                  </h2>
-                  <p className="text-xs text-text-muted mt-1">
-                    Upload between 5 and 10 high-quality images.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div
-                  onClick={() => fileInputRef.current.click()}
-                  className={`relative overflow-hidden border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-300 group ${
-                    errors.images
-                      ? "border-error bg-error/5"
-                      : "border-border bg-bg/50"
-                  }`}>
-                  <input
-                    type="file"
-                    multiple
-                    ref={fileInputRef}
-                    onChange={handleImageChange}
-                    className="hidden"
-                    accept="image/jpeg,image/png,image/jpg,image/webp"
-                  />
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl ${
-                        errors.images
-                          ? "bg-error text-white"
-                          : "bg-primary text-primary-foreground"
-                      }`}>
-                      <HiOutlinePlus className="w-8 h-8" />
-                    </div>
-                    <p
-                      className={`mt-6 text-sm font-black uppercase tracking-widest ${errors.images ? "text-error" : "text-text"}`}>
-                      Select Media
-                    </p>
-                    <p className="text-xs text-text-muted mt-2 font-medium">
-                      JPEG, PNG, WEBP (Max 10MB each)
-                    </p>
-                  </div>
-                </div>
-
-                {/* Validation Proxy for Images moved to useEffect */}
-
-                {images.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 pt-4">
-                    {images.map((img, index) => (
-                      <div
-                        key={index}
-                        className="relative group aspect-4/3 rounded-2xl overflow-hidden border border-border shadow-md">
-                        <img
-                          src={img.url}
-                          alt=""
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeImage(index);
-                            }}
-                            className="p-2 bg-error cursor-pointer text-white rounded-xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-lg">
-                            <HiOutlineXMark className="w-5 h-5" />
-                          </button>
-                        </div>
-                        <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-xs text-white px-2 py-0.5 rounded-full font-bold uppercase">
-                          IMG {index + 1}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {errors.images && (
-                  <div className="p-3 rounded-xl bg-error/10 border border-error/20 flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
-                    <div className="w-2 h-2 rounded-full bg-error" />
-                    <p className="text-[11px] font-black text-error uppercase tracking-wider">
-                      {errors.images.message}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* General Information Section */}
+            {/* General Info */}
             <section className="bg-bg-surface border border-border rounded-3xl p-8 shadow-2xl shadow-black/5">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
@@ -329,10 +343,6 @@ const CreateProductPage = () => {
                         value: 10,
                         message: "Describe features in at least 10 characters",
                       },
-                      maxLength: {
-                        value: 150,
-                        message: "Description limit is 150 characters",
-                      },
                     })}
                   />
                 </div>
@@ -358,58 +368,267 @@ const CreateProductPage = () => {
                 />
               </div>
             </section>
-          </div>
 
-          {/* Sidebar Area */}
-          <div className="lg:col-span-4 space-y-10">
-            {/* Pricing Section */}
+            {/* Variants */}
             <section className="bg-bg-surface border border-border rounded-3xl p-8 shadow-2xl shadow-black/5">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <HiOutlineCurrencyRupee className="w-6 h-6" />
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <HiOutlineViewColumns className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-text uppercase tracking-tight">
+                      Product Variants
+                    </h2>
+                    <p className="text-xs text-text-muted mt-1">
+                      Add size, color, stock, images, and pricing per variant.
+                    </p>
+                  </div>
                 </div>
-                <h2 className="text-xl font-black text-text uppercase tracking-tight">
-                  Pricing
-                </h2>
+                <Button
+                  type="button"
+                  onClick={() =>
+                    appendVariant({
+                      stock: 0,
+                      isDefault: false,
+                      attributes: [{ key: "Size", value: "" }],
+                      price: { amount: "", discountPrice: 0, currency: "INR" },
+                      weight: 0,
+                      dimensions: { length: 0, width: 0, height: 0 },
+                      status: "Active",
+                      images: [],
+                    })
+                  }
+                  size="sm">
+                  <HiOutlinePlus className="w-5 h-5 mr-1 inline" /> Add Variant
+                </Button>
               </div>
 
-              <div className="space-y-6">
-                <Input
-                  type="number"
-                  label="Retail Price"
-                  placeholder="0.00"
-                  error={errors.price?.amount?.message}
-                  {...register("price.amount", {
-                    required: "Amount required",
-                    min: { value: 0.01, message: "Price must be > 0" },
-                  })}
-                />
-                <Input
-                  type="number"
-                  label="Sale Price (Optional)"
-                  placeholder="0.00"
-                  error={errors.price?.discountPrice?.message}
-                  {...register("price.discountPrice", {
-                    validate: (value) => {
-                      if (!value) return true;
-                      const amount = watch("price.amount");
-                      return (
-                        parseFloat(value) < parseFloat(amount) ||
-                        "Must be less than Retail Price"
-                      );
-                    },
-                  })}
-                />
-                <Select
-                  label="Currency"
-                  options={["INR", "USD", "EUR", "GBP", "JPY"]}
-                  error={errors.price?.currency?.message}
-                  {...register("price.currency")}
-                />
+              <div className="space-y-8">
+                {variantFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="p-6 border border-border rounded-2xl bg-bg/50 relative group">
+                    {variantFields.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(index)}
+                        className="absolute top-4 right-4 p-2 bg-error/10 text-error rounded-xl hover:bg-error/20 transition-colors opacity-0 group-hover:opacity-100">
+                        <HiOutlineTrash className="w-5 h-5" />
+                      </button>
+                    )}
+
+                    <h3 className="text-sm font-black text-text uppercase mb-6">
+                      Variant {index + 1}{" "}
+                      {watch(`variants.${index}.isDefault`) && "(Default)"}
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-6">
+                        <div className="flex gap-4">
+                          <div className="flex-1">
+                            <Input
+                              type="number"
+                              label="Stock"
+                              {...register(`variants.${index}.stock`, {
+                                required: "Stock is required",
+                                min: 0,
+                              })}
+                              error={errors?.variants?.[index]?.stock?.message}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Select
+                              label="Status"
+                              options={["Active", "Out of stock", "Hidden"]}
+                              {...register(`variants.${index}.status`)}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <div className="flex-1">
+                            <Input
+                              type="number"
+                              label="Price"
+                              {...register(`variants.${index}.price.amount`, {
+                                required: "Price required",
+                                min: 0,
+                              })}
+                              error={
+                                errors?.variants?.[index]?.price?.amount
+                                  ?.message
+                              }
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Input
+                              type="number"
+                              label="Discount Price"
+                              {...register(
+                                `variants.${index}.price.discountPrice`,
+                                { min: 0 },
+                              )}
+                              error={
+                                errors?.variants?.[index]?.price?.discountPrice
+                                  ?.message
+                              }
+                            />
+                          </div>
+                        </div>
+
+                        <Select
+                          label="Currency"
+                          options={["INR", "USD", "EUR", "GBP", "JPY"]}
+                          {...register(`variants.${index}.price.currency`)}
+                        />
+
+                        <div className="pt-2">
+                          <Checkbox
+                            label="Set as Default Variant"
+                            {...register(`variants.${index}.isDefault`)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <Input
+                            type="number"
+                            label="Weight (kg)"
+                            {...register(`variants.${index}.weight`)}
+                          />
+                        </div>
+                        
+                        <div>
+                          <span className="text-[12px] text-text-muted font-bold block px-1 mb-2">
+                            DIMENSIONS (L×W×H)
+                          </span>
+                          <div className="grid grid-cols-3 gap-4">
+                            <Input
+                              type="number"
+                              placeholder="Length"
+                              {...register(
+                                `variants.${index}.dimensions.length`,
+                              )}
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Width"
+                              {...register(
+                                `variants.${index}.dimensions.width`,
+                              )}
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Height"
+                              {...register(
+                                `variants.${index}.dimensions.height`,
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-border/50">
+                          <VariantAttributes
+                            control={control}
+                            register={register}
+                            variantIndex={index}
+                            errors={errors}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Variant Images */}
+                    <div className="mt-8 pt-8 border-t border-border">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          <HiOutlineCloudArrowUp className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black text-text uppercase">
+                            Variant Gallery
+                          </h4>
+                          <p className="text-[10px] text-text-muted mt-0.5">
+                            Upload images specific to this variant
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <label
+                          className={`block relative overflow-hidden border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-300 group ${
+                            errors?.variants?.[index]?.images
+                              ? "border-error bg-error/5"
+                              : "border-border bg-bg/50"
+                          }`}>
+                          <input
+                            type="file"
+                            multiple
+                            onChange={(e) => handleImageChange(e, index)}
+                            className="hidden"
+                            accept="image/jpeg,image/png,image/jpg,image/webp"
+                          />
+                          <div className="flex flex-col items-center">
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl ${
+                                errors?.variants?.[index]?.images
+                                  ? "bg-error text-white"
+                                  : "bg-primary text-primary-foreground"
+                              }`}>
+                              <HiOutlinePlus className="w-6 h-6" />
+                            </div>
+                            <p
+                              className={`mt-4 text-xs font-black uppercase tracking-widest ${errors?.variants?.[index]?.images ? "text-error" : "text-text"}`}>
+                              Select Media
+                            </p>
+                          </div>
+                        </label>
+
+                        {(variantsData?.[index]?.images || []).length > 0 && (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 pt-2">
+                            {(variantsData?.[index]?.images || []).map(
+                              (img, imgIndex) => (
+                                <div
+                                  key={imgIndex}
+                                  className="relative group aspect-4/3 rounded-2xl overflow-hidden border border-border shadow-md">
+                                  <img
+                                    src={img.url}
+                                    alt=""
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        removeImage(index, imgIndex);
+                                      }}
+                                      className="p-2 bg-error cursor-pointer text-white rounded-xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 shadow-lg">
+                                      <HiOutlineXMark className="w-5 h-5" />
+                                    </button>
+                                  </div>
+                                  <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-xs text-white px-2 py-0.5 rounded-full font-bold uppercase">
+                                    IMG {imgIndex + 1}
+                                  </div>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
+          </div>
 
-            {/* Tags Section */}
+          {/* Sidebar */}
+          <div className="lg:col-span-4 space-y-10">
+            {/* Tags */}
             <section className="bg-bg-surface border border-border rounded-3xl p-8 shadow-2xl shadow-black/5">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
@@ -459,9 +678,9 @@ const CreateProductPage = () => {
               />
             </section>
 
-            {/* Attributes Section */}
+            {/* Options */}
             <section className="bg-bg-surface border border-border rounded-3xl p-8 shadow-2xl shadow-black/5">
-              <h3 className="font-black text-text  uppercase  mb-6">
+              <h3 className="font-black text-text uppercase mb-6">
                 Product Options
               </h3>
               <div className="space-y-6">
@@ -484,7 +703,7 @@ const CreateProductPage = () => {
               </div>
             </section>
 
-            {/* Quality Rating */}
+            {/* Rating */}
             <section className="bg-bg-surface border border-border rounded-3xl p-8 shadow-2xl shadow-black/5">
               <div className="flex items-center gap-3 mb-6">
                 <HiOutlineStar className="w-5 h-5 text-text" />

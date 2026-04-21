@@ -1,134 +1,155 @@
 import mongoose from "mongoose";
-// const variantSchema = new mongoose.Schema({
-//   size: {
-//     type: String,
-//     enum: ["XS", "S", "M", "L", "XL", "XXL"],
-//     required: true,
-//   },
-//   color: {
-//     type: String,
-//     required: true,
-//   },
-//   stock: {
-//     type: Number,
-//     required: true,
-//     default: 0,
-//   },
-//   sku: {
-//     type: String,
-//     unique: true,
-//   },
-// });
-// 
-// const reviewSchema = new mongoose.Schema(
-//   {
-//     user: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "User",
-//     },
-//     rating: {
-//       type: Number,
-//       required: true,
-//       min: 1,
-//       max: 5,
-//     },
-//     comment: String,
-//   },
-//   { timestamps: true }
-// );
 
 const productSchema = new mongoose.Schema(
-    {
-        title: {
-            type: String,
-            required: true,
-            trim: true,
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+
+    brand: {
+      type: String,
+      default: "Generic",
+    },
+
+    category: {
+      type: String,
+      enum: ["Men", "Women", "Kids"],
+      required: true,
+    },
+    totalStock: {
+      type: Number,
+      default: 0,
+    },
+    subCategory: {
+      type: String,
+      enum: ["T-Shirts", "Hoodies", "Jeans"],
+      required: true,
+    },
+
+    tags: [
+      {
+        type: String,
+      },
+    ],
+
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+
+    isNewProduct: {
+      type: Boolean,
+      default: true,
+    },
+
+    isSale: {
+      type: Boolean,
+      default: false,
+    },
+
+    saleEndDate: Date,
+
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    variants: [
+      {
+        stock: {
+          type: Number,
+          required: true,
+          default: 0,
+          min: 0,
         },
 
-        description: {
-            type: String,
-            required: true,
+        isDefault: {
+          type: Boolean,
+          default: false,
         },
 
-        brand: {
-            type: String,
-            default: "Generic",
-        },
-
-        category: {
-            type: String,
-            enum: ["Men", "Women", "Kids"],
-            required: true,
-        },
-
-        subCategory: {
-            type: String,
-            enum: ["T-Shirts", "Hoodies", "Jeans"],
-            required: true,
+        attributes: {
+          type: Object,
+          default: {},
         },
 
         price: {
-            amount: {
-                type: Number,
-                required: true,
-            },
-            discountPrice: {
-                type: Number,
-                default: 0,
-            },
-            currency: {
-                type: String,
-                enum: ["USD", "EUR", "INR", "GBP", "JPY"],
-                default: "INR",
-            },
+          amount: {
+            type: Number,
+            required: true,
+            min: 0,
+          },
+
+          discountPrice: {
+            type: Number,
+            default: 0,
+            min: 0,
+          },
+
+          currency: {
+            type: String,
+            enum: ["USD", "EUR", "INR", "GBP", "JPY"],
+            default: "INR",
+          },
         },
 
         images: [
-            {
-                _id:false,
-                url: String,
-                thumbnailUrl: String,
-                fileId: String,
+          {
+            _id: false,
+            url: {
+              type: String,
+              required: true,
             },
+            thumbnailUrl: {
+              type: String,
+              required: true,
+            },
+            fileId: {
+              type: String,
+              required: true,
+            },
+          },
         ],
 
-        tags: [
-            {
-                type: String,
-            },
-        ],
-
-        isFeatured: {
-            type: Boolean,
-            default: false,
+        weight: {
+          type: Number,
+          default: 0,
         },
 
-        isNewProduct: {
-            type: Boolean,
-            default: true,
+        dimensions: {
+          length: Number,
+          width: Number,
+          height: Number,
         },
 
-        isSale: {
-            type: Boolean,
-            default: false,
+        status: {
+          type: String,
+          enum: ["Active", "Out of stock", "Hidden"],
+          default: "Active",
         },
-
-        saleEndDate: Date,
-
-        averageRating: {
-            type: Number,
-            default: 0,
-        },
-
-        createdBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-        },
+      },
+    ],
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    { timestamps: true }
+  },
+  { timestamps: true },
 );
 
+productSchema.pre("save", function () {
+  if (!this.isModified("variants")) return;
+
+  this.totalStock = this.variants.reduce((total, variant) => {
+    return total + (variant.stock || 0);
+  }, 0);
+});
+
 export const productModel = mongoose.model("Product", productSchema);
-
-
-

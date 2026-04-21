@@ -3,7 +3,7 @@ import { FiBox, FiTag, FiEye } from "react-icons/fi";
 
 function ProductCard({ product, onView }) {
   const primaryImage =
-    product?.images?.[0]?.thumbnailUrl ||
+    product?.variants?.[0].images?.[0]?.thumbnailUrl ||
     "https://placehold.co/300x360/1a1a2e/ffffff?text=No+Image";
 
   const formatPrice = (price) =>
@@ -15,12 +15,12 @@ function ProductCard({ product, onView }) {
 
   // Using the project's custom variables: success, primary, error
   const stockStatus =
-    product?.stock > 10
+    product?.totalStock > 10
       ? {
           label: "In Stock",
           cls: "bg-success/15 text-success border-success/30",
         }
-      : product?.stock > 0
+      : product?.totalStock > 0
         ? {
             label: "Low Stock",
             cls: "bg-primary/15 text-primary border-primary/30",
@@ -31,13 +31,13 @@ function ProductCard({ product, onView }) {
           };
 
   return (
-    <div className="group flex flex-col bg-bg-surface rounded-2xl overflow-hidden border border-border transition-all duration-300 hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
+    <div className="group  flex flex-col bg-bg-surface rounded-2xl overflow-hidden border border-border transition-all duration-300 hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
       {/* Image Container */}
-      <div className="relative overflow-hidden bg-bg-muted">
+      <div className="relative overflow-hidden bg-bg-muted w-full">
         <img
           src={primaryImage}
           alt={product?.title || "Product Image"}
-          className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+          className="object-cover w-full transition-transform duration-700 group-hover:scale-110"
         />
 
         {/* Badges Container */}
@@ -68,23 +68,29 @@ function ProductCard({ product, onView }) {
         </div>
 
         {/* Metadata */}
-        <div className="flex items-center gap-4 text-sm text-text-muted mt-auto pt-2">
+        <div className="flex items-center gap-4 text-sm text-text-muted mt-auto">
           <div className="flex items-center gap-1.5 bg-bg-muted px-2 py-1 rounded-md">
-            <FiBox className="w-4 h-4" />
+            <span>Total Stock : </span>
             <span className="font-medium">
-              {product?.stock ?? "implement stock"}
+              {product?.totalStock ?? "implement stock"}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 bg-bg-muted px-2 py-1 rounded-md">
+          {/* <div className="flex items-center gap-1.5 bg-bg-muted px-2 py-1 rounded-md">
             <FiTag className="w-4 h-4" />
             <span className="font-medium">
-              {product?.sizes?.length ?? 0} sizes (to implement)
+              {product?.variants?.[0]?.size || "No Size"}
             </span>
-          </div>
+          </div> */}
+           <div className="flex items-center w-fit gap-1.5 bg-bg-muted px-2 py-1 rounded-md">
+          <span className="text-text-muted text-sm">Variants :</span>
+          <span className="font-medium text-sm">
+            {product?.variants?.length}
+          </span>
+        </div>
         </div>
 
         {/* Price Row */}
-        <div className="flex justify-between items-center mt-1">
+        <div className="flex justify-between items-center ">
           <div className="space-y-1">
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-bold text-text">
@@ -102,9 +108,9 @@ function ProductCard({ product, onView }) {
         {/* Action Button */}
         <button
           onClick={() => onView(product)}
-          className="mt-3 cursor-pointer w-fit flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 px-5 rounded-xl font-semibold transition-colors active:scale-[0.98]">
-          <FiEye className="w-4 h-4" />
+          className="mt-3 cursor-pointer w-fit flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-3 text-sm rounded-xl font-semibold transition-colors active:scale-[0.98]">
           <span className="w-fit">Quick View</span>
+          <FiEye className="w-4 h-4" />
         </button>
       </div>
     </div>

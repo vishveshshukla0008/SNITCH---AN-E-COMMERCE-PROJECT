@@ -33,6 +33,8 @@ function Dashboard() {
     fetchAllSellingProducts();
   }, []);
 
+  console.log(sellerAllProducts);
+
   const handleViewProduct = (product) => {
     let ans = confirm(
       `View Product Action Triggered for ${product?.title || "Product"}`,
@@ -41,10 +43,8 @@ function Dashboard() {
   };
 
   const products = Array.isArray(sellerAllProducts) ? sellerAllProducts : [];
-  const inStockCount = products.filter((p) => p.stock > 0).length;
-  const outOfStockCount = products.filter(
-    (p) => !p.stock || p.stock <= 0,
-  ).length;
+  const inStockCount = products.filter((p) => p.totalStock > 0).length;
+  const outOfStockCount = products.filter((p) => p.totalStock <= 0).length;
 
   return (
     <div className="min-h-screen bg-bg text-text p-6 md:p-10 lg:p-12">
@@ -106,7 +106,7 @@ function Dashboard() {
             ))}
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {sellerAllProducts?.map((product) => (
               <ProductCard
                 key={product?._id}

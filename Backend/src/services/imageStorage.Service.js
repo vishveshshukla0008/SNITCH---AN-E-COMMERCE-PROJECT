@@ -6,13 +6,20 @@ const client = new ImageKit({
     privateKey: config.IMAGEKIT_PRIVATE_KEY
 })
 
-
-export const uploadFile = async ({ buffer, fileName, folder = "Snitch" }) => {
+export const uploadFile = async ({
+    buffer,
+    fileName,
+    folder = "Snitch",
+}) => {
     const result = await client.files.upload({
         file: await ImageKit.toFile(buffer),
         fileName,
         folder
     });
 
-    return result;
-}
+    return {
+        url: result.url,
+        fileId: result.fileId,
+        thumbnailUrl: result.thumbnailUrl,
+    };
+};

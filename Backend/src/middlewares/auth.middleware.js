@@ -54,7 +54,6 @@ export const authSeller = AsyncWrapper(async (req, res, next) => {
         throw new AppError(403, "Unauthorized ! You are not a seller !");
     }
 
-    console.log(user);
 
     req.user = user;
     next();
