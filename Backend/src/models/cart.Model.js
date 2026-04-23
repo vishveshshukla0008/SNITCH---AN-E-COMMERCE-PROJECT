@@ -4,32 +4,38 @@ import priceSchema from "./price.Schema.js";
 const cartSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: "User",
+        required: true,
     },
     items: [
         {
             product: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Product',
-                required: true
+                ref: "Product",
+                required: true,
             },
             variant: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Product.variants'
+                ref: "Product.variants",
+            },
+            size: {
+                type: String,
+                enum: ["XS", "S", "M", "L", "XL", "XXL", "3XL"],
+                required: true,
+                _id: false
             },
             quantity: {
                 type: Number,
-                default: 1
+                default: 1,
             },
             price: {
                 type: priceSchema,
-                required: true
-            }
-        }
-    ]
-})
+                required: true,
+            },
+        },
+    ],
+});
 
-const cartModel = mongoose.model('Cart', cartSchema);
+const cartModel = mongoose.model("Cart", cartSchema);
 
 export default cartModel;

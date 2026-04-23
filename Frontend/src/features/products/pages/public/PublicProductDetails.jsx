@@ -17,20 +17,21 @@ import useCart from "../../../cart/hooks/useCart";
 import Loader from "../../../../shared/components/Loader";
 import Button from "../../../../shared/components/Button";
 import { useSelector } from "react-redux";
+import { toast } from "react-hot-toast";
 import ProductCard from "../../components/ProductCard";
 
 const PublicProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { handleGetSinglePublicProduct, handleGetAllPublicProducts } = useProduct();
+  const { handleGetSinglePublicProduct, handleGetAllPublicProducts } =
+    useProduct();
   const { productLoading, allProducts } = useSelector((state) => state.product);
   const { handleAddToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState("M");
+  const [selectedSize, setSelectedSize] = useState("");
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -42,9 +43,16 @@ const PublicProductDetails = () => {
           data.variants.find((v) => v.isDefault) || data.variants[0];
         setSelectedVariant(defaultVar);
         setSelectedImage(defaultVar?.images?.[0]?.url || "");
+
+        // Set initial size
+        if (defaultVar?.sizes?.length > 0) {
+          const firstAvailableSize =
+            defaultVar.sizes.find((s) => s.stockOfSize > 0)?.size ||
+            defaultVar.sizes[0].size;
+          setSelectedSize(firstAvailableSize);
+        }
       }
-      
-      // Fetch all products for suggestions if not already in store
+
       if (allProducts.length === 0) {
         await handleGetAllPublicProducts();
       }
@@ -53,7 +61,6 @@ const PublicProductDetails = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Suggestion logic: Filter products from the same category, excluding the current one
   const suggestedProducts = useMemo(() => {
     if (!product) return [];
     return allProducts
@@ -84,6 +91,17 @@ const PublicProductDetails = () => {
   const handleVariantSelect = (variant) => {
     setSelectedVariant(variant);
     setSelectedImage(variant.images?.[0]?.url || "");
+
+    // Update selected size if the current one isn't available in the new variant
+    const isSizeAvailable = variant.sizes?.some(
+      (s) => s.size === selectedSize && s.stockOfSize > 0,
+    );
+    if (!isSizeAvailable) {
+      const firstAvailableSize =
+        variant.sizes?.find((s) => s.stockOfSize > 0)?.size ||
+        variant.sizes?.[0]?.size;
+      if (firstAvailableSize) setSelectedSize(firstAvailableSize);
+    }
   };
 
   const handleProductClick = (p) => {
@@ -174,7 +192,7 @@ const PublicProductDetails = () => {
           <div className="flex flex-col">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-primary uppercase tracking-[0.2em]">
+                <span className="text-xs font-bold text-text uppercase tracking-[0.2em]">
                   {product.brand || "SNITCH"}
                 </span>
                 <div className="flex items-center gap-1 text-sm font-medium">
@@ -234,9 +252,7 @@ const PublicProductDetails = () => {
                         }`}>
                         <img
                           src={
-                            v.images?.[0]?.thumbnailUrl ||
-                            v.images?.[0]?.url ||
-                            "https://placehold.co/100x133?text=No+Image"
+                            v.images?.[0]?.thumbnailUrl || v.images?.[0]?.url
                           }
                           alt={v.attributes?.color}
                           className="w-full h-full object-cover rounded-[calc(var(--radius-xl)-2px)]"
@@ -245,7 +261,7 @@ const PublicProductDetails = () => {
                       <p
                         className={`text-[10px] font-bold text-center truncate uppercase tracking-tight transition-colors ${
                           selectedVariant?._id === v._id
-                            ? "text-primary"
+                            ? "text-text"
                             : "text-text-muted group-hover:text-text"
                         }`}>
                         {v.attributes?.color}
@@ -290,7 +306,6 @@ const PublicProductDetails = () => {
                 </div>
               </div>
 
-           
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold uppercase tracking-wider">
@@ -301,52 +316,55 @@ const PublicProductDetails = () => {
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  {["S", "M", "L", "XL", "XXL"].map((size) => (
+                  {selectedVariant?.sizes?.map((sizeObj) => (
                     <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`min-w-[56px] h-12 flex items-center justify-center rounded-xl border text-sm font-bold transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none ${
-                        selectedSize === size
-                          ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      key={sizeObj.size}
+                      onClick={() => setSelectedSize(sizeObj.size)}
+                      disabled={sizeObj.stockOfSize <= 0}
+                      className={`min-w-[56px] h-12 flex flex-col items-center justify-center rounded-xl border text-sm font-bold transition-all active:scale-95 disabled:opacity-30 disabled:grayscale disabled:pointer-events-none ${
+                        selectedSize === sizeObj.size
+                          ? "bg-primary border-primary text-text shadow-lg shadow-primary/20"
                           : "border-border hover:border-primary/50 text-text"
                       }`}>
-                      {size}
+                      <span>{sizeObj.size}</span>
+                      {sizeObj.stockOfSize <= 5 && sizeObj.stockOfSize > 0 && (
+                        <span className="text-[8px] font-black uppercase opacity-60">
+                          Low
+                        </span>
+                      )}
                     </button>
                   ))}
+                  {(!selectedVariant?.sizes ||
+                    selectedVariant.sizes.length === 0) && (
+                    <p className="text-xs text-text-muted italic">
+                      No sizes available for this variant.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Quantity and Actions */}
+            {/* Actions */}
             <div className="space-y-4 mb-10">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center bg-bg-muted rounded-xl p-1 border border-border">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 flex items-center justify-center text-xl font-bold hover:bg-bg-surface rounded-lg transition-colors">
-                    -
-                  </button>
-                  <span className="w-12 text-center font-bold">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-10 h-10 flex items-center justify-center text-xl font-bold hover:bg-bg-surface rounded-lg transition-colors">
-                    +
-                  </button>
-                </div>
-                <div className="flex-1">
-                  <Button
-                    variant="primary"
-                    onClick={() => handleAddToCart({
+              <div className="flex-1">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    if (!selectedSize) {
+                      toast.error("Please select a size first!");
+                      return;
+                    }
+                    handleAddToCart({
                       productId: product._id,
                       variantId: selectedVariant._id,
                       size: selectedSize,
-                      quantity: quantity
-                    })}
-                    className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
-                    leftIcon={<FiShoppingBag className="w-5 h-5" />}>
-                    Add to Cart
-                  </Button>
-                </div>
+                      quantity: 1,
+                    });
+                  }}
+                  className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
+                  leftIcon={<FiShoppingBag className="w-5 h-5" />}>
+                  Add to Cart
+                </Button>
               </div>
               <Button
                 variant="outline"
@@ -463,22 +481,24 @@ const PublicProductDetails = () => {
             </div>
           </div>
         </div>
-        
+
         {/* You May Also Like Section */}
         {suggestedProducts.length > 0 && (
           <div className="mt-24">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-boldk">Highly Suggested Items</h2>
-              <Link to="/collections" className="text-sm font-bold text-primary hover:underline underline-offset-4 transition-all">
+              <Link
+                to="/collections"
+                className="text-sm font-bold text-primary hover:underline underline-offset-4 transition-all">
                 View All Collections
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {suggestedProducts.map((p) => (
-                <ProductCard 
-                  key={p._id} 
-                  product={p} 
-                  onView={() => handleProductClick(p)} 
+                <ProductCard
+                  key={p._id}
+                  product={p}
+                  onView={() => handleProductClick(p)}
                 />
               ))}
             </div>

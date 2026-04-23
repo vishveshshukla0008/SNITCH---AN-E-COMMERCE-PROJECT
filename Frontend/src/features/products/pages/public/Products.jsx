@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { FiSearch, FiFilter, FiX, FiChevronDown, FiGrid, FiList } from "react-icons/fi";
 import useProduct from "../../hooks/useProduct";
-import ProductCard from "../../components/ProductCard";
+import BuyerProductCard from "../../components/BuyerProductCard";
 import { useNavigate } from "react-router";
 
 const Products = () => {
@@ -144,7 +144,7 @@ const Products = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-bg-muted rounded-2xl aspect-[3/4] mb-4"></div>
+                <div className="bg-bg-muted rounded-2xl aspect-3/4 mb-4"></div>
                 <div className="h-4 bg-bg-muted rounded w-2/3 mb-2"></div>
                 <div className="h-4 bg-bg-muted rounded w-1/2"></div>
               </div>
@@ -153,10 +153,10 @@ const Products = () => {
         ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {filteredProducts.map((product) => (
-              <ProductCard
+              <BuyerProductCard
                 key={product._id}
                 product={product}
-                onView={handleProductClick}
+                onClick={handleProductClick}
               />
             ))}
           </div>

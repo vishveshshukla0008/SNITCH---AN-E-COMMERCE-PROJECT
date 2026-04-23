@@ -23,12 +23,13 @@ const Login = () => {
     },
   });
 
-  if (authLoading) {
-    return <Loader />;
-  }
+  if (authLoading) return <Loader />;
 
-  if (user&& user.role === "seller") {
-    return <Navigate to="/products/dashboard" replace/>;
+  if (user && user.role === "seller") {
+    return <Navigate to="/products/dashboard" replace />;
+  }
+  if (user && user.role === "buyer") {
+    return <Navigate to="/" replace />;
   }
 
   const onSubmit = async (data) => {

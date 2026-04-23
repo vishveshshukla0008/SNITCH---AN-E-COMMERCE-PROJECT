@@ -23,10 +23,12 @@ const useCart = () => {
     async function handleAddToCart({ productId, variantId, size, quantity = 1 }) {
         try {
             // Check if item already exists in cart with same variant AND size
-            const existingItem = cartItems.find(item => 
-                item.product._id === productId && item.variant === variantId && item.size === size
-            );
-
+            const existingItem = cartItems.find(item => {
+                const itemProductId = item.product?._id?.toString() || item.product?.toString();
+                return itemProductId === productId && 
+                       item.variant?.toString() === variantId?.toString() && 
+                       item.size === size;
+            });
             if (existingItem) {
                 // If exists, update quantity
                 const newQuantity = existingItem.quantity + quantity;
@@ -51,6 +53,7 @@ const useCart = () => {
         try {
             const res = await updateCartItemQuantity(productId, variantId, size, newQuantity);
             dispatch(setItems(res.cart.items));
+            toast.success(res.message);
         } catch (error) {
             console.error(error);
             toast.error("Failed to update quantity");
@@ -58,21 +61,22 @@ const useCart = () => {
     }
 
     async function handleRemoveItem(productId, variantId, size) {
+        let toastId;
         try {
+            toastId = toast.loading("Removing item, please wait");
             const res = await removeFromCart(productId, variantId, size);
             dispatch(setItems(res.cart.items));
-            toast.success("Item removed from bag");
+            toast.success(res.message, { id: toastId });
         } catch (error) {
-            console.error(error);
-            toast.error("Failed to remove item");
+            toast.error(error.message, { id: toastId });
         }
     }
 
-    return { 
-        getCartHandler, 
-        handleAddToCart, 
-        handleUpdateQuantity, 
-        handleRemoveItem 
+    return {
+        getCartHandler,
+        handleAddToCart,
+        handleUpdateQuantity,
+        handleRemoveItem
     };
 }
 

@@ -155,10 +155,10 @@ const CartPage = () => {
                       <div>
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-1 block">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-text/40 mb-1 block">
                               {item.product?.category}
                             </span>
-                            <h3 className="font-black text-xl md:text-2xl tracking-tight leading-tight group-hover:text-primary transition-colors">
+                            <h3 className="font-black text-xl md:text-2xl tracking-tight leading-tight transition-colors">
                               {item.product?.title}
                             </h3>
                           </div>
@@ -177,22 +177,13 @@ const CartPage = () => {
                         </div>
 
                         <div className="flex items-center gap-3 mb-6">
-                          <div className="flex items-center gap-1.5 px-3 py-1 bg-bg-muted rounded-full border border-border/40">
-                            <div
-                              className="w-2.5 h-2.5 rounded-full shadow-inner border border-black/10"
-                              style={{
-                                backgroundColor:
-                                  currentVariant?.attributes?.color,
-                              }}
-                            />
-                            <span className="text-[11px] font-bold uppercase text-text-muted">
-                              {currentVariant?.attributes?.color}
-                            </span>
-                          </div>
                           {item.size && (
-                            <span className="text-[11px] font-black px-3 py-1 bg-black text-white rounded-full uppercase">
-                              SIZE {item.size}
-                            </span>
+                            <div className="flex items-center gap-2 px-4 py-1.5 bg-text text-bg rounded-full shadow-sm">
+                              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Size</span>
+                              <span className="text-xs font-black uppercase">
+                                {item.size}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -231,7 +222,7 @@ const CartPage = () => {
 
                         {/* Price */}
                         <div className="text-right">
-                          <p className="text-2xl font-black text-primary tracking-tighter">
+                          <p className="text-2xl font-black text-text tracking-tighter">
                             {formatPrice(itemPrice * item.quantity)}
                           </p>
                           {item.price?.discountPrice < item.price?.amount && (
@@ -299,7 +290,7 @@ const CartPage = () => {
                       Shipping
                     </span>
                     <span
-                      className={`font-black text-sm uppercase tracking-widest ${shippingProgress === 100 ? "text-success" : "text-primary"}`}>
+                      className={`font-black text-sm uppercase tracking-widest ${shippingProgress === 100 ? "text-success" : "text-text"}`}>
                       {shippingProgress === 100
                         ? "Complimentary"
                         : formatPrice(40)}
@@ -324,7 +315,7 @@ const CartPage = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-5xl font-black text-primary tracking-tighter leading-none mb-1">
+                      <p className="text-5xl font-black text-text tracking-tighter leading-none mb-1">
                         {formatPrice(
                           cartTotalAmount * 1.18 +
                             (shippingProgress === 100 ? 0 : 40),

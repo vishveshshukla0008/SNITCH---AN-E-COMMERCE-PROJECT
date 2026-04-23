@@ -11,11 +11,11 @@ export const addToCart = async (productId, variantId, size, quantity = 1) => {
 }
 
 export const updateCartItemQuantity = async (productId, variantId, size, quantity) => {
-    const response = await api.put(`/cart/update/${productId}/${variantId}`, { size, quantity });
+    const response = await api.patch(`/cart/${productId}/${variantId}`, { size, quantity });
     return response;
 }
 
 export const removeFromCart = async (productId, variantId, size) => {
-    const response = await api.delete(`/cart/remove/${productId}/${variantId}`, { data: { size } });
+    const response = await api.delete(`/cart/${productId}/${variantId}`, { data: { size } });
     return response;
 }
