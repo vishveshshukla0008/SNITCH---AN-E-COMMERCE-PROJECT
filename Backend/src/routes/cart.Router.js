@@ -17,7 +17,6 @@ const router = Router();
 
 router.post("/add/:productId/:variantId", authUser, validateAddToCart, cartController.addToCartController)
 
-
 //=========================================================================
 
 /**

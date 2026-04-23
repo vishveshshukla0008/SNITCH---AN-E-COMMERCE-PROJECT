@@ -30,13 +30,15 @@ const VariantAttributes = ({ control, register, variantIndex, errors }) => {
   return (
     <div className="space-y-3 mt-4">
       <div className="flex justify-between items-center">
-        <label className="text-sm font-bold text-text">Attributes</label>
+        <label className="text-sm font-bold text-text uppercase tracking-tight">
+          Additional Attributes
+        </label>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={() => append({ key: "", value: "" })}
-          className="text-xs py-1 px-2">
+          className="text-[10px] py-1 px-3 h-8">
           <HiOutlinePlus className="w-3 h-3 mr-1 inline" /> Add Attribute
         </Button>
       </div>
@@ -44,7 +46,7 @@ const VariantAttributes = ({ control, register, variantIndex, errors }) => {
         <div key={item.id} className="flex gap-3 items-start">
           <div className="flex-1">
             <Input
-              placeholder="e.g. Size"
+              placeholder="e.g. Color"
               {...register(`variants.${variantIndex}.attributes.${index}.key`, {
                 required: "Key required",
               })}
@@ -56,7 +58,7 @@ const VariantAttributes = ({ control, register, variantIndex, errors }) => {
           </div>
           <div className="flex-1">
             <Input
-              placeholder="e.g. XL"
+              placeholder="e.g. Crimson Red"
               {...register(
                 `variants.${variantIndex}.attributes.${index}.value`,
                 { required: "Value required" },
@@ -70,11 +72,88 @@ const VariantAttributes = ({ control, register, variantIndex, errors }) => {
           <button
             type="button"
             onClick={() => remove(index)}
-            className="p-3 mt-1 bg-error/10 text-error rounded-xl hover:bg-error/20 transition-colors">
+            className="p-3 bg-error/10 text-error rounded-xl hover:bg-error/20 transition-colors mt-0.5">
             <HiOutlineTrash className="w-5 h-5" />
           </button>
         </div>
       ))}
+    </div>
+  );
+};
+
+const VariantSizes = ({ control, register, variantIndex, errors }) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `variants.${variantIndex}.sizes`,
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <label className="text-[12px] font-bold text-text-muted uppercase px-1 tracking-widest">
+          Sizes & Available Stock
+        </label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => append({ size: "", stockOfSize: 0 })}
+          className="text-[10px] py-1 px-3 h-8">
+          <HiOutlinePlus className="w-3 h-3 mr-1 inline" /> Add Size
+        </Button>
+      </div>
+
+      {fields.length === 0 && (
+        <div className="text-center py-6 border-2 border-dashed border-border/40 rounded-2xl bg-bg/30">
+          <p className="text-[10px] text-text-muted font-black uppercase tracking-widest">
+            No inventory added
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-3">
+        {fields.map((item, index) => (
+          <div
+            key={item.id}
+            className="flex gap-3 items-start animate-in fade-in slide-in-from-left-2 duration-300">
+            <div className="flex-2">
+              <Select
+                options={["XS", "S", "M", "L", "XL", "XXL", "3XL"]}
+                {...register(`variants.${variantIndex}.sizes.${index}.size`, {
+                  required: "Size is required",
+                })}
+                error={
+                  errors?.variants?.[variantIndex]?.sizes?.[index]?.size
+                    ?.message
+                }
+              />
+            </div>
+            <div className="flex-1">
+              <Input
+                type="number"
+                placeholder="Stock Qty"
+                {...register(
+                  `variants.${variantIndex}.sizes.${index}.stockOfSize`,
+                  {
+                    required: "Required",
+                    min: { value: 0, message: "Min 0" },
+                  },
+                )}
+                error={
+                  errors?.variants?.[variantIndex]?.sizes?.[index]?.stockOfSize
+                    ?.message
+                }
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => remove(index)}
+              className="p-3 bg-error/10 text-error rounded-xl hover:bg-error/20 transition-colors self-start mt-0.5">
+              <HiOutlineTrash className="w-5 h-5" />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -109,9 +188,9 @@ const CreateProductPage = () => {
       averageRating: 0,
       variants: [
         {
-          stock: 0,
           isDefault: true,
-          attributes: [{ key: "Size", value: "" }],
+          sizes: [{ size: "", stockOfSize: 0 }],
+          attributes: [],
           price: { amount: "", discountPrice: 0, currency: "INR" },
           weight: 0,
           dimensions: { length: 0, width: 0, height: 0 },
@@ -205,7 +284,20 @@ const CreateProductPage = () => {
     // Variants
     if (data.variants?.length) {
       data.variants.forEach((variant, index) => {
-        formData.append(`variants[${index}][stock]`, variant.stock);
+        // Sizes & Stock
+        if (variant.sizes?.length) {
+          variant.sizes.forEach((s, sIndex) => {
+            formData.append(
+              `variants[${index}][sizes][${sIndex}][size]`,
+              s.size,
+            );
+            formData.append(
+              `variants[${index}][sizes][${sIndex}][stockOfSize]`,
+              s.stockOfSize,
+            );
+          });
+        }
+
         formData.append(
           `variants[${index}][isDefault]`,
           String(variant.isDefault),
@@ -389,9 +481,9 @@ const CreateProductPage = () => {
                   type="button"
                   onClick={() =>
                     appendVariant({
-                      stock: 0,
                       isDefault: false,
-                      attributes: [{ key: "Size", value: "" }],
+                      sizes: [{ size: "", stockOfSize: 0 }],
+                      attributes: [],
                       price: { amount: "", discountPrice: 0, currency: "INR" },
                       weight: 0,
                       dimensions: { length: 0, width: 0, height: 0 },
@@ -423,25 +515,29 @@ const CreateProductPage = () => {
                       {watch(`variants.${index}.isDefault`) && "(Default)"}
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-6">
-                        <div className="flex gap-4">
-                          <div className="flex-1">
-                            <Input
-                              type="number"
-                              label="Stock"
-                              {...register(`variants.${index}.stock`, {
-                                required: "Stock is required",
-                                min: 0,
-                              })}
-                              error={errors?.variants?.[index]?.stock?.message}
-                            />
-                          </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-8">
+                        <div className="pt-2 border-t border-border/50 md:border-none md:pt-0">
+                          <VariantSizes
+                            control={control}
+                            register={register}
+                            variantIndex={index}
+                            errors={errors}
+                          />
+                        </div>
+
+                        <div className="flex gap-4 items-end">
                           <div className="flex-1">
                             <Select
                               label="Status"
                               options={["Active", "Out of stock", "Hidden"]}
                               {...register(`variants.${index}.status`)}
+                            />
+                          </div>
+                          <div className="flex-1 pb-1">
+                            <Checkbox
+                              label="Set as Default Variant"
+                              {...register(`variants.${index}.isDefault`)}
                             />
                           </div>
                         </div>
@@ -499,7 +595,7 @@ const CreateProductPage = () => {
                             {...register(`variants.${index}.weight`)}
                           />
                         </div>
-                        
+
                         <div>
                           <span className="text-[12px] text-text-muted font-bold block px-1 mb-2">
                             DIMENSIONS (L×W×H)

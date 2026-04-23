@@ -75,11 +75,12 @@ const productSchema = new mongoose.Schema(
           default: false,
         },
 
-        attributes: {
-          type: Object,
-          default: {},
-        },
-
+        sizes: [
+          {
+            size: { type: String, required: true, enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'] },
+            stockOfSize: { type: Number, required: true }
+          }
+        ],
         price: priceSchema,
 
         images: [
@@ -129,10 +130,18 @@ const productSchema = new mongoose.Schema(
 
 productSchema.pre("save", function () {
   if (!this.isModified("variants")) return;
+  let allVariantsStock = 0;
 
-  this.totalStock = this.variants.reduce((total, variant) => {
-    return total + (variant.stock || 0);
-  }, 0);
+  this.variants.forEach((variant) => {
+    let singleVariantStock = 0;
+    variant.sizes.forEach((size) => {
+      singleVariantStock += size?.stockOfSize;
+    });
+    variant.stock = singleVariantStock;
+    allVariantsStock += variant.stock;
+  })
+
+  this.totalStock = allVariantsStock;
 });
 
 export const productModel = mongoose.model("Product", productSchema);

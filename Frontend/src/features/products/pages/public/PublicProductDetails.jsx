@@ -13,6 +13,7 @@ import {
   FiCheck,
 } from "react-icons/fi";
 import useProduct from "../../hooks/useProduct";
+import useCart from "../../../cart/hooks/useCart";
 import Loader from "../../../../shared/components/Loader";
 import Button from "../../../../shared/components/Button";
 import { useSelector } from "react-redux";
@@ -23,11 +24,13 @@ const PublicProductDetails = () => {
   const navigate = useNavigate();
   const { handleGetSinglePublicProduct, handleGetAllPublicProducts } = useProduct();
   const { productLoading, allProducts } = useSelector((state) => state.product);
+  const { handleAddToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState("M");
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -301,7 +304,12 @@ const PublicProductDetails = () => {
                   {["S", "M", "L", "XL", "XXL"].map((size) => (
                     <button
                       key={size}
-                      className="min-w-[56px] h-12 flex items-center justify-center rounded-xl border border-border text-sm font-bold transition-all hover:border-primary hover:text-primary active:scale-95 disabled:opacity-30 disabled:pointer-events-none">
+                      onClick={() => setSelectedSize(size)}
+                      className={`min-w-[56px] h-12 flex items-center justify-center rounded-xl border text-sm font-bold transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none ${
+                        selectedSize === size
+                          ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                          : "border-border hover:border-primary/50 text-text"
+                      }`}>
                       {size}
                     </button>
                   ))}
@@ -328,6 +336,12 @@ const PublicProductDetails = () => {
                 <div className="flex-1">
                   <Button
                     variant="primary"
+                    onClick={() => handleAddToCart({
+                      productId: product._id,
+                      variantId: selectedVariant._id,
+                      size: selectedSize,
+                      quantity: quantity
+                    })}
                     className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
                     leftIcon={<FiShoppingBag className="w-5 h-5" />}>
                     Add to Cart

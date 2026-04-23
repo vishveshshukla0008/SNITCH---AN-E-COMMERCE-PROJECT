@@ -13,6 +13,7 @@ import Dashboard from "../features/products/pages/Dashboard";
 import ProductDetails from "../features/products/pages/ProductDetails";
 import Products from "../features/products/pages/public/Products";
 import PublicProductDetails from "../features/products/pages/public/PublicProductDetails";
+import CartPage from "../features/cart/pages/CartPage";
 
 const sellerRoutes = [
   {
@@ -26,6 +27,13 @@ const sellerRoutes = [
   {
     path: "products/:id",
     element: <ProductDetails />,
+  },
+];
+
+const userRoutes = [
+  {
+    path: "cart",
+    element: <CartPage />,
   },
 ];
 
@@ -47,6 +55,13 @@ const AppRoutes = () => {
               key={path}
               path={path}
               element={<Protect role="seller">{element}</Protect>}
+            />
+          ))}
+          {userRoutes.map(({ path, element }) => (
+            <Route
+              key={path}
+              path={path}
+              element={<Protect role="buyer">{element}</Protect>}
             />
           ))}
         </Route>

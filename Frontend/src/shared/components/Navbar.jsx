@@ -13,6 +13,7 @@ import { useSelector } from "react-redux";
 import AvatarDropdown from "./AvatarDropdown";
 import { useAuth } from "../../features/Authentication/hook/useAuth";
 import { useTheme } from "../../features/Theme/hook/useTheme";
+import Search from "./Search";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,6 +21,7 @@ const Navbar = () => {
 
   const user = useSelector((state) => state.auth.user);
   const authLoading = useSelector((state) => state.auth.authLoading);
+  const cartTotalQuantity = useSelector((state) => state.cart.cartTotalQuantity);
   const { logoutHandler } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -105,17 +107,21 @@ const Navbar = () => {
         {/* Icons / Actions */}
         <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           {/* Desktop Search */}
-          <button className="text-text-muted hover:text-text transition-colors duration-300 hidden md:flex p-2 rounded-xl hover:bg-bg-muted">
-            <HiOutlineSearch size={20} />
-          </button>
+          <Search className="hidden md:block" />
 
-          <button className="relative group p-2 rounded-xl hover:bg-bg-muted transition-colors">
+          <Link
+            to={"/cart"}
+            className="relative group p-2 rounded-xl hover:bg-bg-muted transition-colors">
             <HiOutlineShoppingBag
               size={20}
               className="text-text group-hover:text-primary transition-colors"
             />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_#f59e0b]" />
-          </button>
+            {cartTotalQuantity > 0 && (
+              <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-black flex items-center justify-center h-5 w-5 rounded-full">
+                {cartTotalQuantity}
+              </span>
+            )}
+          </Link>
 
           <button
             onClick={toggleTheme}
@@ -195,14 +201,12 @@ const Navbar = () => {
           <div className="mt-auto flex flex-col gap-8">
             <div className="w-full h-px bg-border/20" />
 
-            <button className="flex items-center gap-4 text-text-muted hover:text-text transition-colors group">
-              <div className="w-10 h-10 rounded-xl bg-bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                <HiOutlineSearch size={20} />
-              </div>
-              <span className="text-sm font-bold uppercase tracking-widest">
-                Search Catalog
+            <div className="flex flex-col gap-4">
+              <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.5em] opacity-60 px-1">
+                Quick Search
               </span>
-            </button>
+              <Search placeholder="What are you looking for?" />
+            </div>
 
             <div className="flex flex-col gap-4">
               <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.5em] opacity-60">

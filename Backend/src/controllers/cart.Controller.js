@@ -6,9 +6,8 @@ import cartModel from "../models/cart.Model.js";
 
 const addToCartController = AsyncWrapper(async (req, res) => {
     const { productId, variantId } = req.params;
-    const {quantity} = req.body;
+    const { quantity } = req.body;
 
-    console.log(quantity)
 
     let product = await productModel.findOne(
         { _id: productId, "variants._id": variantId },
@@ -35,15 +34,13 @@ const addToCartController = AsyncWrapper(async (req, res) => {
             })
         }
 
-        console.log("Before update")
-        
+
         await cartModel.findOneAndUpdate(
             { user: req.user._id, "items.product": productId, "items.variant": variantId },
             { $inc: { "items.$.quantity": quantity } },
             { new: true }
         )
-        
-        console.log("after update")
+
         return res.status(200).json({
             message: "Cart updated successfully",
             success: true
@@ -57,7 +54,6 @@ const addToCartController = AsyncWrapper(async (req, res) => {
         })
     }
 
-    console.log("Product in cart Controller ", product)
     const selectedVariant = product.variants.id(variantId);
 
     cart.items.push({
@@ -82,12 +78,23 @@ const addToCartController = AsyncWrapper(async (req, res) => {
 
 
 const getCart = AsyncWrapper(async (req, res) => {
+    const user = req.user
+
+    let cart = await cartModel.findOne({ user: user._id }).populate("items.product");
+
+    if (!cart) {
+        cart = await cartModel.create({ user: user._id });
+    }
+
+    return res.status(200).json({
+        message: "Cart fetched successfully",
+        success: true,
+        cart
+    })
 
 })
 
 
 
 
-
-
-export const cartController = { addToCartController, getCart };
+    export const cartController = { addToCartController, getCart };
