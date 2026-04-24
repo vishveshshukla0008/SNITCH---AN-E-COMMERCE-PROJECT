@@ -41,9 +41,6 @@ const addToCartController = AsyncWrapper(async (req, res) => {
                 item.variant?.toString() === variantId && item?.size === size
         ).quantity;
 
-
-        console.log("Quantity in cart in controller ", quantityInCart)
-
         if (quantityInCart + quantity > stock) {
             return res.status(400).json({
                 message: `Only ${stock} items left in stock. and you already have ${quantityInCart} items in your cart`,
@@ -110,10 +107,25 @@ const getCart = AsyncWrapper(async (req, res) => {
         cart = await cartModel.create({ user: user._id });
     }
 
+    const updatedItems = cart.items.map((item) => {
+        const matchedVariant = item.product?.variants?.find(
+            (variant) =>
+                variant._id.toString() === item.variant.toString()
+        );
+
+        return {
+            ...item.toObject(),
+            currentPrice: matchedVariant?.price?.discountPrice || matchedVariant?.price?.amount,
+        };
+    });
+
     return res.status(200).json({
-        message: "Cart fetched successfully",
         success: true,
-        cart,
+        message: "Cart fetched successfully",
+        cart: {
+            ...cart.toObject(),
+            items: updatedItems,
+        },
     });
 });
 

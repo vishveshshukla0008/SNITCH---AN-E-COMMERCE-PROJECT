@@ -19,10 +19,11 @@ const CartPage = () => {
   const { cartItems, cartLoading, cartTotalAmount, cartTotalQuantity } =
     useSelector((state) => state.cart);
   const { getCartHandler, handleUpdateQuantity, handleRemoveItem } = useCart();
-
   useEffect(() => {
     getCartHandler();
   }, []);
+
+  console.log(cartItems);
 
   const formatPrice = (price) =>
     new Intl.NumberFormat("en-IN", {
@@ -130,8 +131,12 @@ const CartPage = () => {
                 const currentVariant = item.product?.variants?.find(
                   (v) => v._id === item.variant,
                 );
-                const itemPrice =
-                  item.price?.discountPrice || item.price?.amount || 0;
+                const storedPrice = item.price?.discountPrice || item.price?.amount || 0;
+                const itemPrice = item.currentPrice || storedPrice;
+                const priceDiff = item.currentPrice ? item.currentPrice - storedPrice : 0;
+                const isPriceDecreased = priceDiff < 0;
+                const isPriceIncreased = priceDiff > 0;
+                const isPriceChanged = isPriceDecreased || isPriceIncreased;
 
                 return (
                   <div
@@ -176,12 +181,34 @@ const CartPage = () => {
                           </button>
                         </div>
 
-                        <div className="flex items-center gap-3 mb-6">
+                        <div className="flex flex-col gap-3 mb-6">
                           {item.size && (
-                            <div className="flex items-center gap-2 px-4 py-1.5 bg-text text-bg rounded-full shadow-sm">
-                              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Size</span>
+                            <div className="flex items-center gap-2 px-4 py-1.5 bg-text text-bg rounded-full shadow-sm w-fit">
+                              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
+                                Size
+                              </span>
                               <span className="text-xs font-black uppercase">
                                 {item.size}
+                              </span>
+                            </div>
+                          )}
+
+                          {isPriceDecreased && (
+                            <div className="flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-xl border border-success/20 animate-in fade-in slide-in-from-left-2 duration-500">
+                              <span className="text-[11px] font-black uppercase tracking-wider flex items-center gap-2">
+                                <span className="flex h-2 w-2 rounded-full bg-success animate-ping" />
+                                Good News! Price has decreased by{" "}
+                                {formatPrice(Math.abs(priceDiff))}
+                              </span>
+                            </div>
+                          )}
+
+                          {isPriceIncreased && (
+                            <div className="flex items-center gap-2 bg-error/10 text-error px-4 py-2 rounded-xl border border-error/20 animate-in fade-in slide-in-from-left-2 duration-500">
+                              <span className="text-[11px] font-black uppercase tracking-wider flex items-center gap-2">
+                                <span className="flex h-2 w-2 rounded-full bg-error animate-pulse" />
+                                Price Updated! Increased by{" "}
+                                {formatPrice(priceDiff)} (Due to market rate)
                               </span>
                             </div>
                           )}
@@ -225,9 +252,9 @@ const CartPage = () => {
                           <p className="text-2xl font-black text-text tracking-tighter">
                             {formatPrice(itemPrice * item.quantity)}
                           </p>
-                          {item.price?.discountPrice < item.price?.amount && (
+                          {isPriceChanged && (
                             <p className="text-[11px] text-text-muted line-through font-bold">
-                              {formatPrice(item.price.amount * item.quantity)}
+                              {formatPrice(storedPrice * item.quantity)}
                             </p>
                           )}
                         </div>
@@ -298,7 +325,7 @@ const CartPage = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-text-muted font-medium">
-                      Estimated GST
+                      Estimated GST (18%)
                     </span>
                     <span className="font-black text-sm">
                       {formatPrice(cartTotalAmount * 0.18)}
@@ -310,8 +337,8 @@ const CartPage = () => {
                       <span className="font-black text-lg block mb-1">
                         Total
                       </span>
-                      <p className="text-[10px] text-text-muted uppercase tracking-[0.2em] font-black">
-                        Inclusive of GST
+                      <p className="text-[10px] text-text-muted uppercase tracking-[0.2em]">
+                        Inclusive of GST(18%)
                       </p>
                     </div>
                     <div className="text-right">

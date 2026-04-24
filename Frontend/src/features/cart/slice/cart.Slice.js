@@ -17,7 +17,11 @@ const cartSlice = createSlice({
       state.cartItems = items;
       // Calculate totals
       state.cartTotalQuantity = items.reduce((total, item) => total + (item.quantity || 0), 0);
-      state.cartTotalAmount = items.reduce((total, item) => total + ((item.price?.discountPrice || item.price?.amount || 0) * (item.quantity || 0)), 0);
+      state.cartTotalAmount = items.reduce((total, item) => {
+        const storedPrice = item.price?.discountPrice || item.price?.amount || 0;
+        const itemPrice = item.currentPrice || storedPrice;
+        return total + (itemPrice * (item.quantity || 0));
+      }, 0);
     },
     setCartLoading: (state, action) => {
       state.cartLoading = action.payload;
