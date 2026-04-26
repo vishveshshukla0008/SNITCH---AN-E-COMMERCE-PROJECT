@@ -18,8 +18,7 @@ const cartSlice = createSlice({
       // Calculate totals
       state.cartTotalQuantity = items.reduce((total, item) => total + (item.quantity || 0), 0);
       state.cartTotalAmount = items.reduce((total, item) => {
-        const storedPrice = item.price?.discountPrice || item.price?.amount || 0;
-        const itemPrice = item.currentPrice || storedPrice;
+        const itemPrice = item.currentPrice || item.price?.discountPrice || item.price?.amount || 0;
         return total + (itemPrice * (item.quantity || 0));
       }, 0);
     },

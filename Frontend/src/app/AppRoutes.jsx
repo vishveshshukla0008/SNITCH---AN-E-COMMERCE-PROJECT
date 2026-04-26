@@ -14,6 +14,7 @@ import ProductDetails from "../features/products/pages/ProductDetails";
 import Products from "../features/products/pages/public/Products";
 import PublicProductDetails from "../features/products/pages/public/PublicProductDetails";
 import CartPage from "../features/cart/pages/CartPage";
+import PaymentSuccess from "../features/cart/pages/PaymentSuccess";
 
 const sellerRoutes = [
   {
@@ -34,6 +35,10 @@ const userRoutes = [
   {
     path: "cart",
     element: <CartPage />,
+  },
+  {
+    path: "/payment/success",
+    element: <PaymentSuccess />,
   },
 ];
 

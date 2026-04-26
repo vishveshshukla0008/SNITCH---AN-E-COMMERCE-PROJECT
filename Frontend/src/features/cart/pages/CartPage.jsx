@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import useCart from "../hooks/useCart";
 import { useSelector } from "react-redux";
 import Loader from "../../../shared/components/Loader";
@@ -12,18 +12,30 @@ import {
   FiGift,
   FiShield,
 } from "react-icons/fi";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import Button from "../../../shared/components/Button";
+import { useRazorpay } from "react-razorpay";
+import toast from "react-hot-toast";
 
 const CartPage = () => {
+  const navigate = useNavigate();
   const { cartItems, cartLoading, cartTotalAmount, cartTotalQuantity } =
     useSelector((state) => state.cart);
-  const { getCartHandler, handleUpdateQuantity, handleRemoveItem } = useCart();
+  const user = useSelector((state) => state.auth.user);
+  const {
+    getCartHandler,
+    handleUpdateQuantity,
+    handleRemoveItem,
+    handleCreateCartOrder,
+    handleVerifyCartPayment,
+  } = useCart();
   useEffect(() => {
     getCartHandler();
   }, []);
 
   console.log(cartItems);
+
+  const { Razorpay, error, isLoading } = useRazorpay();
 
   const formatPrice = (price) =>
     new Intl.NumberFormat("en-IN", {
@@ -32,16 +44,42 @@ const CartPage = () => {
       maximumFractionDigits: 0,
     }).format(price || 0);
 
-  // Humanize: Free shipping progress logic
-  const FREE_SHIPPING_THRESHOLD = 999;
-  const shippingProgress = Math.min(
-    (cartTotalAmount / FREE_SHIPPING_THRESHOLD) * 100,
-    100,
-  );
-  const remainingForFreeShipping = Math.max(
-    FREE_SHIPPING_THRESHOLD - cartTotalAmount,
-    0,
-  );
+  async function handleCheckOut() {
+    const res = await handleCreateCartOrder();
+    console.log(res);
+    const options = {
+      key: "rzp_test_ShNSkpxt3emQVJ",
+      amount: res.order.amount,
+      currency: res.order.currency,
+      name: "Snitch",
+      description: "Your cart transaction",
+      order_id: res.order.id,
+
+      handler: async function (response) {
+        const res = await handleVerifyCartPayment(response);
+        if (res.success) {
+          toast.success(res.message);
+          navigate(`/payment/success?order_id=${response?.razorpay_order_id}`);
+        } else {
+          toast.error(res.message);
+          navigate(`/payment/error?order_id=${response?.razorpay_order_id}`);
+        }
+      },
+
+      prefill: {
+        name: user.fullname,
+        email: user.email,
+        contact: user.contact,
+      },
+
+      theme: {
+        color: "#F37254",
+      },
+    };
+
+    const razorpayInstance = new Razorpay(options);
+    razorpayInstance.open();
+  }
 
   if (cartLoading && cartItems.length === 0) return <Loader />;
 
@@ -97,46 +135,25 @@ const CartPage = () => {
             <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
-
+        k
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* Left: Items List */}
           <div className="lg:col-span-7 space-y-10">
-            <div className="bg-bg-surface rounded-xl p-6 shadow-sm border border-border/40">
-              <div className="flex items-center gap-4 mb-4">
-                <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${shippingProgress === 100 ? "bg-success/10 text-success" : "bg-primary/5 text-primary"}`}>
-                  <FiTruck className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-base">
-                    {shippingProgress === 100
-                      ? "Yay! You've unlocked Free Shipping! 🚚"
-                      : `Just ${formatPrice(remainingForFreeShipping)} away from Free Shipping`}
-                  </h4>
-                  <p className="text-xs text-text-muted">
-                    Standard delivery usually takes 3-5 business days.
-                  </p>
-                </div>
-              </div>
-              <div className="h-2 w-full bg-bg-muted rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-1000 ease-out rounded-full ${shippingProgress === 100 ? "bg-success" : "bg-primary"}`}
-                  style={{ width: `${shippingProgress}%` }}
-                />
-              </div>
-            </div>
-
             <div className="space-y-6">
               {cartItems.map((item) => {
-                const currentVariant = item.product?.variants?.find(
-                  (v) => v._id === item.variant,
-                );
-                const storedPrice = item.price?.discountPrice || item.price?.amount || 0;
-                const itemPrice = item.currentPrice || storedPrice;
-                const priceDiff = item.currentPrice ? item.currentPrice - storedPrice : 0;
+                const currentVariant = Array.isArray(item.product?.variants)
+                  ? item.product.variants.find((v) => v._id === item.variant)
+                  : item.product?.variants;
+                const originalPrice = item.price?.amount || 0;
+                const addedPrice = item.price?.discountPrice || originalPrice;
+                const finalPrice = item.currentPrice || addedPrice;
+
+                const priceDiff = finalPrice - addedPrice;
                 const isPriceDecreased = priceDiff < 0;
                 const isPriceIncreased = priceDiff > 0;
-                const isPriceChanged = isPriceDecreased || isPriceIncreased;
+                const isPriceChangedSinceAdded =
+                  isPriceDecreased || isPriceIncreased;
+                const hasDiscount = originalPrice > finalPrice;
 
                 return (
                   <div
@@ -148,6 +165,9 @@ const CartPage = () => {
                         src={
                           currentVariant?.images?.[0]?.url ||
                           item.product?.images?.[0]?.url ||
+                          (Array.isArray(item.product?.variants)
+                            ? item.product.variants[0]?.images?.[0]?.url
+                            : null) ||
                           "https://placehold.co/200x300?text=No+Image"
                         }
                         alt={item.product?.title}
@@ -161,6 +181,7 @@ const CartPage = () => {
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-text/40 mb-1 block">
+                              {item.product?.brand || "SNITCH"} |{" "}
                               {item.product?.category}
                             </span>
                             <h3 className="font-black text-xl md:text-2xl tracking-tight leading-tight transition-colors">
@@ -250,11 +271,11 @@ const CartPage = () => {
                         {/* Price */}
                         <div className="text-right">
                           <p className="text-2xl font-black text-text tracking-tighter">
-                            {formatPrice(itemPrice * item.quantity)}
+                            {formatPrice(finalPrice * item.quantity)}
                           </p>
-                          {isPriceChanged && (
+                          {hasDiscount && (
                             <p className="text-[11px] text-text-muted line-through font-bold">
-                              {formatPrice(storedPrice * item.quantity)}
+                              {formatPrice(originalPrice * item.quantity)}
                             </p>
                           )}
                         </div>
@@ -312,41 +333,16 @@ const CartPage = () => {
                       {formatPrice(cartTotalAmount)}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-text-muted font-medium">
-                      Shipping
-                    </span>
-                    <span
-                      className={`font-black text-sm uppercase tracking-widest ${shippingProgress === 100 ? "text-success" : "text-text"}`}>
-                      {shippingProgress === 100
-                        ? "Complimentary"
-                        : formatPrice(40)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-text-muted font-medium">
-                      Estimated GST (18%)
-                    </span>
-                    <span className="font-black text-sm">
-                      {formatPrice(cartTotalAmount * 0.18)}
-                    </span>
-                  </div>
 
                   <div className="pt-8 border-t border-border/40 flex justify-between items-end">
                     <div>
                       <span className="font-black text-lg block mb-1">
-                        Total
+                        Order Total
                       </span>
-                      <p className="text-[10px] text-text-muted uppercase tracking-[0.2em]">
-                        Inclusive of GST(18%)
-                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-5xl font-black text-text tracking-tighter leading-none mb-1">
-                        {formatPrice(
-                          cartTotalAmount * 1.18 +
-                            (shippingProgress === 100 ? 0 : 40),
-                        )}
+                        {formatPrice(cartTotalAmount)}
                       </p>
                     </div>
                   </div>
@@ -354,9 +350,10 @@ const CartPage = () => {
 
                 <div className="space-y-4">
                   <Button
+                    onClick={handleCheckOut}
                     variant="primary"
                     className="w-full h-16 rounded-xl text-xl font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                    Checkout Now
+                    Proceed to checkout
                   </Button>
                   <p className="text-center text-[10px] text-text-muted font-bold px-6 leading-relaxed">
                     By clicking checkout, you acknowledge that items in your bag
@@ -396,7 +393,6 @@ const CartPage = () => {
             </div>
           </div>
         </div>
-
         {/* Humanize: Why SNITCH? Section */}
         <div className="mt-32 pt-20 border-t border-border/40">
           <div className="text-center mb-16">

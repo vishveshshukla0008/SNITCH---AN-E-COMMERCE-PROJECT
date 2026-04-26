@@ -61,8 +61,22 @@ router.patch("/:productId/:variantId", authUser, updateCartItemValidation, cartC
 
 
 
+// ======================= Cart Payment =============================
+/***
+ * @route POST /api/cart/payment/create/order
+ * @description Creating order for payment purpose from RazorPay !
+ * @access  Private
+ */
 
+router.post("/payment/create/order", authUser, cartController.createOrderController)
 
+/***
+ * @route POST /api/cart/payment/verify/order
+ * @description Verify order after payment done !
+ * @access  Priavte
+ */
+
+router.post("/payment/verify/order", authUser, cartController.verifyOrderController);
 
 
 export default router;

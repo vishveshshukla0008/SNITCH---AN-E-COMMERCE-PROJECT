@@ -19,3 +19,20 @@ export const removeFromCart = async (productId, variantId, size) => {
     const response = await api.delete(`/cart/${productId}/${variantId}`, { data: { size } });
     return response;
 }
+
+// ===================== Payment Routes =========================
+
+export const createCartOrder = async () => {
+    const response = await api.post("/cart/payment/create/order");
+    return response;
+}
+
+export const verifyCartPayment = async (data) => {
+    const response = await api.post("/cart/payment/verify/order", data);
+    return response;
+}
+
+export const getOrderDetails = async (orderId) => {
+    const response = await api.get(`/cart/order/${orderId}`);
+    return response;
+}

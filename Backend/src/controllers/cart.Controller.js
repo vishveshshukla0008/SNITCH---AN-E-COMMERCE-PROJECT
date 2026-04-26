@@ -1,8 +1,13 @@
+import mongoose from "mongoose";
 import { AsyncWrapper } from "../utils/AsyncWrapper.js";
 import { productModel } from "../models/product.model.js";
 import { AppError } from "../utils/AppError.js";
-import { stockOfVariant } from "../dao/product.dao.js";
+import { findUsersCart, stockOfVariant } from "../dao/product.dao.js";
 import cartModel from "../models/cart.Model.js";
+import { createOrder } from "../services/payment.service.js";
+import { paymentModel } from "../models/payment.model.js";
+import { validatePaymentVerification } from "../../node_modules/razorpay/dist/utils/razorpay-utils.js"
+import { config } from "../config/config.js";
 
 const addToCartController = AsyncWrapper(async (req, res) => {
     const { productId, variantId } = req.params;
@@ -56,7 +61,7 @@ const addToCartController = AsyncWrapper(async (req, res) => {
                 "items.size": size
             },
             { $inc: { "items.$.quantity": quantity } },
-            { new: true },
+            { returnDocument: "after" },
         ).populate("items.product");
 
         return res.status(200).json({
@@ -99,36 +104,25 @@ const addToCartController = AsyncWrapper(async (req, res) => {
 const getCart = AsyncWrapper(async (req, res) => {
     const user = req.user;
 
-    let cart = await cartModel
-        .findOne({ user: user._id })
-        .populate("items.product");
+    let cart = await findUsersCart(user);
+
+
 
     if (!cart) {
-        cart = await cartModel.create({ user: user._id });
-    }
+        await cartModel.create({ user: user._id });
 
-    const updatedItems = cart.items.map((item) => {
-        const matchedVariant = item.product?.variants?.find(
-            (variant) =>
-                variant._id.toString() === item.variant.toString()
-        );
-
-        return {
-            ...item.toObject(),
-            currentPrice: matchedVariant?.price?.discountPrice || matchedVariant?.price?.amount,
+        cart = {
+            items: [],
+            totalPrice: 0
         };
-    });
+    }
 
     return res.status(200).json({
         success: true,
         message: "Cart fetched successfully",
-        cart: {
-            ...cart.toObject(),
-            items: updatedItems,
-        },
+        cart
     });
 });
-
 const deleteCartItemController = AsyncWrapper(async (req, res) => {
     const { productId, variantId } = req.params;
     const { size } = req.body;
@@ -145,7 +139,7 @@ const deleteCartItemController = AsyncWrapper(async (req, res) => {
                     size: size
                 }
             }
-        }, { new: true }).populate("items.product");
+        }, { returnDocument: "after" }).populate("items.product");
 
     if (!updatedCart) throw new AppError(404, "Item was not found in the cart")
 
@@ -183,7 +177,7 @@ const updateCartItemController = AsyncWrapper(async (req, res) => {
                 "items.$.quantity": quantity
             }
         },
-        { new: true }
+        { returnDocument: "after" }
     ).populate("items.product");
 
     if (!updatedCart) {
@@ -198,9 +192,61 @@ const updateCartItemController = AsyncWrapper(async (req, res) => {
 
 })
 
+const createOrderController = AsyncWrapper(async (req, res) => {
+    const cart = await findUsersCart(req.user);
+    const order = await createOrder({ amount: cart.totalPrice, currency: "INR" });
+
+    await paymentModel.create({
+        user: req.user._id,
+        razorpay: {
+            orderId: order.id
+        },
+        totalAmount: cart.totalPrice,
+        orderDetails: cart.items.map((item) => ({
+            title: item.title,
+            productId: item.product._id,
+            variantId: item.variant,
+            quantity: item.quantity,
+            images: item.product.variants.images,
+            description: item.product.description,
+            price: {
+                amount: item.price.amount,
+                discountPrice: item.price.discountPrice,
+                currency: item.price.currency
+            }
+        }))
+    })
+    return res.status(200).json({ success: true, message: "Order Success !", order });
+});
+
+const verifyOrderController = AsyncWrapper(async (req, res) => {
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+    const paymentRecord = await paymentModel.findOne({
+        "razorpay.orderId": razorpay_order_id,
+        user: req.user._id
+    });
+
+    if (!paymentRecord) throw new AppError(404, "Payment record not found for this order");
+
+    const isPaymentValid = validatePaymentVerification({
+        payment_id: razorpay_payment_id,
+        order_id: razorpay_order_id,
+    }, razorpay_signature, config.RAZORPAY_KEY_SECRET);
+
+    if (!isPaymentValid) throw new AppError(400, "Payment verification failed !");
+
+    paymentRecord.razorpay.paymentId = razorpay_payment_id;
+    paymentRecord.status = "success";
+    await paymentRecord.save();
+
+    return res.status(200).json({ success: true, message: "Payment verified successfully !" });
+})
+
 export const cartController = {
     addToCartController,
     getCart,
     deleteCartItemController,
-    updateCartItemController
+    updateCartItemController,
+    createOrderController,
+    verifyOrderController
 };
